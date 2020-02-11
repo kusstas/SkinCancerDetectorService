@@ -31,7 +31,7 @@ void Service::start()
 
 void Service::request(quint64 id, QByteArray image)
 {
-    qCInfo(QLC_SERVICE) << "Request received:" << id;
+    qCInfo(QLC_SERVICE) << "Request received:" << id << "data size" << image.size();
 }
 
 void Service::request(quint64 id, QString imagePath)
@@ -88,7 +88,8 @@ void Service::enableRemoting(ServiceSettings const* settings)
 
     if(!node->enableRemoting(this))
     {
-        auto const message = QString("Enable remoting failed: ") + QMetaEnum::fromType<QRemoteObjectHost::ErrorCode>().valueToKey(node->lastError());
+        auto const message = QString("Enable remoting failed: ")
+                             + QMetaEnum::fromType<QRemoteObjectHost::ErrorCode>().valueToKey(node->lastError());
         qCCritical(QLC_SERVICE) << message;
         throw std::runtime_error(qPrintable(message));
     }
