@@ -1,0 +1,14 @@
+#include <QList>
+#include <QByteArray>
+
+
+POD Result(float positive, float negative)
+
+class SkinCancerDetectorService
+{
+    SLOT(request(quint64 id, QByteArray image))
+    SLOT(request(quint64 id, QString imagePath))
+    SIGNAL(estimatesReady(quint64 id, qint64 milliseconds))
+    SIGNAL(resultReady(quint64 id, Result result))
+    SIGNAL(resultFailed(quint64 id))
+};
