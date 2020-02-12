@@ -1,6 +1,7 @@
 #include "ImageConvertor.h"
 
 #include <QLoggingCategory>
+#include <QElapsedTimer>
 
 #include <exception>
 #include <vector>
@@ -51,6 +52,36 @@ QVector<cv::Mat> ImageConvertor::convert(QString const& path) const
     }
 
     return prepare(source);
+}
+
+qint64 ImageConvertor::estimate() const
+{
+    qCInfo(QLC_IMAGE_CONVERTOR) << "Estimate prepare starting";
+
+    auto const estimateSuccess = [] (qint64 milliseconds) {
+        qCInfo(QLC_TENSOR_ENGINE) << "Estimate prepare completed:" << milliseconds << "milliseconds";
+        return milliseconds;
+    };
+
+    auto const estimateFailed = [] () {
+        qCInfo(QLC_TENSOR_ENGINE) << "Estimate prepare failed";
+        return -1;
+    };
+
+    QElapsedTimer timer;
+
+    cv::Mat source(1920, 1080, CV_8UC3);
+    if (source.empty())
+    {
+        return estimateFailed();
+    }
+
+    if(prepare(source).isEmpty())
+    {
+        return estimateFailed();
+    }
+
+    return estimateSuccess(timer.elapsed());
 }
 
 QVector<cv::Mat> ImageConvertor::prepare(cv::Mat source) const

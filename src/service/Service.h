@@ -40,5 +40,8 @@ private:
     std::shared_ptr<engines::ImageConvertor> m_imageConvertor = nullptr;
 
     TensorEngineWorker* m_tensorEngineWorker = nullptr;
+
+    qint64 m_tensorEngineEstimates = -1;
+    qint64 m_imageConvertorEstimates = -1;
 };
 }

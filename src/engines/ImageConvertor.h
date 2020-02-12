@@ -30,6 +30,12 @@ public:
      */
     QVector<cv::Mat> convert(QString const& path) const;
 
+    /**
+     * @brief estimate dummy image
+     * @return qint64 - milliseconds
+     */
+    qint64 estimate() const;
+
 private:
     /**
      * @brief prepare opened image to pass to TensorEngine

@@ -75,14 +75,14 @@ void Service::setupImageConvertorSettings(engines::ImageConvertorSettings* setti
 
 void Service::enableRemoting(ServiceSettings const* settings)
 {
-    qCInfo(QLC_SERVICE) << "Trying to enable remoting";
-
     if (!settings->valid())
     {
         auto const message = "Url is invalid for enable remoting";
         qCCritical(QLC_SERVICE) << message;
         throw std::runtime_error(message);
     }
+
+    qCInfo(QLC_SERVICE) << "Trying to enable remoting" << settings->url();
 
     auto const node = new QRemoteObjectHost(settings->url(), this);
 
