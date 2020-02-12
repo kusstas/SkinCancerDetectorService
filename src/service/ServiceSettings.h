@@ -26,12 +26,25 @@ public:
     QUrl const& url() const;
 
     /**
+     * @brief max image convertor threads
+     * @return
+     */
+    size_t maxImageConvertorThreads() const;
+
+    /**
      * @brief set url
      * @param url
      */
     void setUrl(QUrl const& url);
 
+    /**
+     * @brief set max image convertor threads
+     * @warning should be greater than 0
+     */
+    void setMaxImageConvertorThreads(size_t maxImageConvertorThreads);
+
 private:
     QUrl m_url{};
+    size_t m_maxImageConvertorThreads = 0;
 };
 }

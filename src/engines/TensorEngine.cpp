@@ -52,6 +52,8 @@ TensorEngine::TensorEngine(TensorEngineBuildSettings const& settings)
         qCInfo(QLC_TENSOR_ENGINE) << "Settings -" << settings;
     }
 
+    m_countTestsForEstimate = settings.countTestsForEstimate();
+
     deserialize(settings);
     if (!m_engine)
     {
@@ -167,10 +169,10 @@ bool TensorEngine::loadToInput(size_t batch, size_t offset, Tensor const* src, s
     auto const count = n * sizeof(Tensor);
 
     bool const result = cudaMemcpy(input, src, count, cudaMemcpyHostToDevice) == ::cudaSuccess;
-    qCInfo(QLC_TENSOR_ENGINE) << "Copy data to device, batch:" << batch
-                              << "offset:" << offset
-                              << "count:" << n
-                              << (result ? "completed" : "failed");
+    qCDebug(QLC_TENSOR_ENGINE) << "Copy data to device, batch:" << batch
+                               << "offset:" << offset
+                               << "count:" << n
+                               << (result ? "completed" : "failed");
 
     return result;
 }
@@ -193,8 +195,8 @@ bool TensorEngine::unloadOutput(size_t batches, Tensor* dst)
     auto const count = batches * m_batchOutputN * sizeof(Tensor);
     bool const result = cudaMemcpy(dst, m_output.get(), count, cudaMemcpyDeviceToHost)  == ::cudaSuccess;
 
-    qCInfo(QLC_TENSOR_ENGINE) << "Unload data from device, batches:" << batches
-                              << (result ? "completed" : "failed");
+    qCDebug(QLC_TENSOR_ENGINE) << "Unload data from device, batches:" << batches
+                               << (result ? "completed" : "failed");
 
     return true;
 }
@@ -221,7 +223,7 @@ qint64 TensorEngine::estimateInfer()
     qCInfo(QLC_TENSOR_ENGINE) << "Estimate infer starting";
 
     auto const estimateSuccess = [] (qint64 milliseconds) {
-        qCInfo(QLC_TENSOR_ENGINE) << "Estimate infer completed:" << milliseconds << "milliseconds";
+        qCInfo(QLC_TENSOR_ENGINE) << "Estimate infer completed:" << milliseconds << "nanoseconds";
         return milliseconds;
     };
 
@@ -235,25 +237,28 @@ qint64 TensorEngine::estimateInfer()
     std::unique_ptr<float[]> const dummyOutput(new float[maxBatches() * m_batchOutputN]);
 
     timer.start();
-    for (size_t b = 0; b < maxBatches(); ++b)
+    for (size_t i = 0; i < m_countTestsForEstimate; ++i)
     {
-        if(!loadToInput(b, 0, dummyInput.get(), m_batchInputN))
+        for (size_t b = 0; b < maxBatches(); ++b)
+        {
+            if(!loadToInput(b, 0, dummyInput.get(), m_batchInputN))
+            {
+                return estimateFailed();
+            }
+        }
+
+        if(!infer(maxBatches()))
+        {
+            return estimateFailed();
+        }
+
+        if(!unloadOutput(maxBatches(), dummyOutput.get()))
         {
             return estimateFailed();
         }
     }
 
-    if(!infer(maxBatches()))
-    {
-        return estimateFailed();
-    }
-
-    if(!unloadOutput(maxBatches(), dummyOutput.get()))
-    {
-        return estimateFailed();
-    }
-
-    return estimateSuccess(timer.elapsed());
+    return estimateSuccess(timer.nsecsElapsed() / m_countTestsForEstimate);
 }
 
 void TensorEngine::serialize(TensorEngineBuildSettings const& settings)

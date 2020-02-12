@@ -1,0 +1,19 @@
+{
+    "service" : {
+        "url" : "local:skin_cancer_detector",
+        "maxImageConvertorThreads" : 8
+    },
+    "tensor" : {
+       "maxWorkspaceSize" : 1048576,
+       "maxBatches" : 4,
+       "onnxFilePath" : "skin_cancer_detector.onnx",
+       "serializedFilePath" : "skin_cancer_detector.pb",
+       "countTestsForEstimate" : 10
+    },
+    "image" : {
+        "mean" : [0.485, 0.456, 0.406],
+        "std" : [0.229, 0.224, 0.225],
+        "zoom" : 1,
+        "countTestsForEstimate" : 50
+    }
+}

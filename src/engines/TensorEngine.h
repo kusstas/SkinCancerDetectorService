@@ -92,7 +92,7 @@ public:
 
     /**
      * @brief forward dummy data for estimates
-     * @return qint64 - milliseconds of forward
+     * @return qint64 - nanoseconds of forward
      */
     qint64 estimateInfer();
 
@@ -167,5 +167,7 @@ private:
 
     ICudaEnginePtr m_engine = nullptr;
     IExecutionContextPtr m_executionContext = nullptr;
+
+    size_t m_countTestsForEstimate = 0;
 };
 }

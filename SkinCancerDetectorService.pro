@@ -9,6 +9,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 HEADERS += \
     src/engines/ImageConvertorSettings.h \
     src/engines/TensorEngineSettings.h \
+    src/service/ImageConvertorWorker.h \
     src/service/Service.h \
     src/service/ServiceSettings.h \
     src/service/SettingsReader.h \
@@ -19,6 +20,7 @@ HEADERS += \
 SOURCES += \
     src/engines/ImageConvertorSettings.cpp \
     src/engines/TensorEngineSettings.cpp \
+    src/service/ImageConvertorWorker.cpp \
     src/service/Service.cpp \
     src/service/ServiceSettings.cpp \
     src/service/SettingsReader.cpp \

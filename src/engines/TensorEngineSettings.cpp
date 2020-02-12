@@ -5,8 +5,11 @@ namespace engines
 {
 bool TensorEngineBuildSettings::valid() const
 {
-    return maxBatches() > 0 && maxWorkspaceSize() > 0
-            && !onnxFilePath().isEmpty() && !serializedFilePath().isEmpty();
+    return maxBatches() > 0
+            && maxWorkspaceSize() > 0
+            && !onnxFilePath().isEmpty()
+            && !serializedFilePath().isEmpty()
+            && countTestsForEstimate() > 0;
 }
 
 size_t TensorEngineBuildSettings::maxBatches() const
@@ -29,6 +32,11 @@ QString const& TensorEngineBuildSettings::serializedFilePath() const
     return m_serializedFilePath;
 }
 
+size_t TensorEngineBuildSettings::countTestsForEstimate() const
+{
+    return m_countTestsForEstimate;
+}
+
 void TensorEngineBuildSettings::setMaxBatches(size_t maxBatches)
 {
     m_maxBatches = maxBatches;
@@ -49,6 +57,11 @@ void TensorEngineBuildSettings::setSerializedFilePath(QString const& serializedF
     m_serializedFilePath = serializedFilePath;
 }
 
+void TensorEngineBuildSettings::setCountTestsForEstimate(size_t countTestsForEstimate)
+{
+    m_countTestsForEstimate = countTestsForEstimate;
+}
+
 QDebug operator<<(QDebug d, TensorEngineBuildSettings const& obj)
 {
     d << "{"
@@ -56,6 +69,7 @@ QDebug operator<<(QDebug d, TensorEngineBuildSettings const& obj)
       << "maxWorkspaceSize=" << obj.maxWorkspaceSize()
       << "onnxFilePath=" << obj.onnxFilePath()
       << "serializedFilePath=" << obj.serializedFilePath()
+      << "countTestsForEstimate=" << obj.countTestsForEstimate()
       << "}";
 
     return d;

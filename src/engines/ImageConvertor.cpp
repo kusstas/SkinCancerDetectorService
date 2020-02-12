@@ -9,7 +9,6 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-
 namespace engines
 {
 Q_LOGGING_CATEGORY(QLC_IMAGE_CONVERTOR, "ImageConvertor")
@@ -59,16 +58,15 @@ qint64 ImageConvertor::estimate() const
     qCInfo(QLC_IMAGE_CONVERTOR) << "Estimate prepare starting";
 
     auto const estimateSuccess = [] (qint64 milliseconds) {
-        qCInfo(QLC_TENSOR_ENGINE) << "Estimate prepare completed:" << milliseconds << "milliseconds";
+        qCInfo(QLC_IMAGE_CONVERTOR) << "Estimate prepare completed:" << milliseconds << "nanoseconds";
         return milliseconds;
     };
 
     auto const estimateFailed = [] () {
-        qCInfo(QLC_TENSOR_ENGINE) << "Estimate prepare failed";
+        qCInfo(QLC_IMAGE_CONVERTOR) << "Estimate prepare failed";
         return -1;
     };
 
-    QElapsedTimer timer;
 
     cv::Mat source(1920, 1080, CV_8UC3);
     if (source.empty())
@@ -76,12 +74,18 @@ qint64 ImageConvertor::estimate() const
         return estimateFailed();
     }
 
-    if(prepare(source).isEmpty())
+    QElapsedTimer timer;
+    timer.start();
+
+    for (size_t i = 0; i < m_settings.countTestsForEstimate(); ++i)
     {
-        return estimateFailed();
+        if(prepare(source).isEmpty())
+        {
+            return estimateFailed();
+        }
     }
 
-    return estimateSuccess(timer.elapsed());
+    return estimateSuccess(timer.nsecsElapsed() / m_settings.countTestsForEstimate());
 }
 
 QVector<cv::Mat> ImageConvertor::prepare(cv::Mat source) const
@@ -111,14 +115,13 @@ QVector<cv::Mat> ImageConvertor::prepare(cv::Mat source) const
                                  << "to:" << m_settings.width() << m_settings.height();
     cv::resize(source, source, cv::Size(m_settings.width(), m_settings.height()));
 
-    source.convertTo(source, CV_32FC3);
-    source /= 255;
-
     std::vector<cv::Mat> channels;
     cv::split(source, channels);
 
     for (size_t ch = 0; ch < channels.size(); ++ch)
     {
+        channels[ch].convertTo(channels[ch], CV_32FC1);
+        channels[ch] /= 255;
         channels[ch] -= m_settings.mean()[ch];
         channels[ch] /= m_settings.std()[ch];
     }

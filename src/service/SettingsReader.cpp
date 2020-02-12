@@ -107,13 +107,15 @@ bool SettingsReader::readService(QJsonObject const* src, service::ServiceSetting
     }
 
     auto const URL_KEY = "url";
+    auto const MAX_THREADS_IMAGE_CONVERTOR = "maxImageConvertorThreads";
 
-    if (!checkRequirements(src, {URL_KEY}))
+    if (!checkRequirements(src, {URL_KEY, MAX_THREADS_IMAGE_CONVERTOR}))
     {
         return false;
     }
 
     dst.setUrl(QUrl((*src)[URL_KEY].toString()));
+    dst.setMaxImageConvertorThreads((*src)[MAX_THREADS_IMAGE_CONVERTOR].toInt());
 
     return true;
 }
@@ -129,8 +131,9 @@ bool SettingsReader::readTensorEngine(QJsonObject const* src, engines::TensorEng
     auto const MX_BATCHES_KEY = "maxBatches";
     auto const ONNX_KEY = "onnxFilePath";
     auto const SERIALIZED_KEY = "serializedFilePath";
+    auto const TESTS_KEY = "countTestsForEstimate";
 
-    if (!checkRequirements(src, {MX_WORKSPACE_KEY, MX_BATCHES_KEY, ONNX_KEY, SERIALIZED_KEY}))
+    if (!checkRequirements(src, {MX_WORKSPACE_KEY, MX_BATCHES_KEY, ONNX_KEY, SERIALIZED_KEY, TESTS_KEY}))
     {
         return false;
     }
@@ -139,6 +142,7 @@ bool SettingsReader::readTensorEngine(QJsonObject const* src, engines::TensorEng
     dst.setMaxBatches((*src)[MX_BATCHES_KEY].toInt());
     dst.setOnnxFilePath((*src)[ONNX_KEY].toString());
     dst.setSerializedFilePath((*src)[SERIALIZED_KEY].toString());
+    dst.setCountTestsForEstimate((*src)[TESTS_KEY].toInt());
 
     return true;
 }
@@ -153,8 +157,9 @@ bool SettingsReader::readImageConvertor(QJsonObject const* src, engines::ImageCo
     auto const STD_KEY = "std";
     auto const MEAN_KEY = "mean";
     auto const ZOOM_KEY = "zoom";
+    auto const TESTS_KEY = "countTestsForEstimate";
 
-    if (!checkRequirements(src, {STD_KEY, MEAN_KEY, ZOOM_KEY}))
+    if (!checkRequirements(src, {STD_KEY, MEAN_KEY, ZOOM_KEY, TESTS_KEY}))
     {
         return false;
     }
@@ -173,6 +178,7 @@ bool SettingsReader::readImageConvertor(QJsonObject const* src, engines::ImageCo
     dst.setStd(std);
     dst.setMean(mean);
     dst.setZoom(static_cast<float>((*src)[ZOOM_KEY].toDouble()));
+    dst.setCountTestsForEstimate((*src)[TESTS_KEY].toInt());
 
     return true;
 }

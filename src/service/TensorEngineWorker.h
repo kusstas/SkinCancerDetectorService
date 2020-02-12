@@ -10,13 +10,16 @@
 
 #include <opencv2/core/mat.hpp>
 
-#include "engines/TensorEngine.h"
 
+namespace engines
+{
+class TensorEngine;
+}
 
 namespace service
 {
 /**
- * @brief The TensorEngineWorker class TensorEngine worker in own thread
+ * @brief The TensorEngineWorker class - TensorEngine worker in own thread
  */
 class TensorEngineWorker : public QObject
 {
@@ -26,6 +29,7 @@ class TensorEngineWorker : public QObject
 
 public:
     explicit TensorEngineWorker(std::shared_ptr<engines::TensorEngine> const& engine, QObject* parent = nullptr);
+    ~TensorEngineWorker();
 
     /**
      * @brief running - running state
@@ -77,8 +81,6 @@ signals:
     void error(quint64 id);
 
 private:
-    using Tensor = engines::TensorEngine::Tensor;
-
     struct Request
     {
         quint64 id;

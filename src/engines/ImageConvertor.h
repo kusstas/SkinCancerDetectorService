@@ -32,7 +32,7 @@ public:
 
     /**
      * @brief estimate dummy image
-     * @return qint64 - milliseconds
+     * @return qint64 - nanoseconds
      */
     qint64 estimate() const;
 

@@ -16,6 +16,7 @@ namespace service
 {
 class ServiceSettings;
 class TensorEngineWorker;
+class ImageConvertorWorker;
 
 class Service : protected SkinCancerDetectorServiceSource
 {
@@ -33,15 +34,20 @@ protected:
 private:
     void createComponents();
     void setupImageConvertorSettings(engines::ImageConvertorSettings* settings) const;
+    void setupService(ServiceSettings const* settings);
     void enableRemoting(ServiceSettings const* settings);
+    void estimate();
+
+    qint64 estimateNextRequest() const;
 
 private:
     std::shared_ptr<engines::TensorEngine> m_tensorEngine = nullptr;
     std::shared_ptr<engines::ImageConvertor> m_imageConvertor = nullptr;
 
     TensorEngineWorker* m_tensorEngineWorker = nullptr;
+    ImageConvertorWorker* m_imageConvertorWorker = nullptr;
 
-    qint64 m_tensorEngineEstimates = -1;
-    qint64 m_imageConvertorEstimates = -1;
+    qint64 m_tensorEngineEstimate = -1;
+    qint64 m_imageConvertorEstimate = -1;
 };
 }

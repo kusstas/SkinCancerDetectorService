@@ -58,6 +58,13 @@ public:
     QVector<float> const& mean() const;
 
     /**
+     * @brief count tests for estimate convert image
+     * elapced time will be calculated average
+     * @return count
+     */
+    size_t countTestsForEstimate() const;
+
+    /**
      * @brief set width
      * @warning should be greater than zero
      * @param width
@@ -94,9 +101,14 @@ public:
     /**
      * @brief set mean
      * @warning for valid should be equal channels
-     * @param mean
      */
     void setMean(QVector<float> const& mean);
+
+    /**
+     * @brief set count tests for estimate convert image
+     * @param countTestsForEstimate should be greater than 0
+     */
+    void setCountTestsForEstimate(size_t countTestsForEstimate);
 
 private:
     int m_width = 0;
@@ -106,6 +118,8 @@ private:
 
     QVector<float> m_std{};
     QVector<float> m_mean{};
+
+    size_t m_countTestsForEstimate = 0;
 };
 
 QDebug operator<<(QDebug d, ImageConvertorSettings const& obj);

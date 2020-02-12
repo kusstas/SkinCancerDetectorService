@@ -10,7 +10,8 @@ bool ImageConvertorSettings::valid() const
             && channels() > 0
             && zoom() >= 1
             && channels() == std().size()
-            && channels() == mean().size();
+            && channels() == mean().size()
+            && countTestsForEstimate() > 0;
 }
 
 int ImageConvertorSettings::width() const
@@ -43,6 +44,11 @@ QVector<float> const& ImageConvertorSettings::mean() const
     return m_mean;
 }
 
+size_t ImageConvertorSettings::countTestsForEstimate() const
+{
+    return m_countTestsForEstimate;
+}
+
 void ImageConvertorSettings::setWidth(int width)
 {
     m_width = width;
@@ -73,6 +79,11 @@ void ImageConvertorSettings::setMean(QVector<float> const& mean)
     m_mean = mean;
 }
 
+void ImageConvertorSettings::setCountTestsForEstimate(size_t countTestsForEstimate)
+{
+    m_countTestsForEstimate = countTestsForEstimate;
+}
+
 QDebug operator<<(QDebug d, ImageConvertorSettings const& obj)
 {
     d << "{"
@@ -82,6 +93,7 @@ QDebug operator<<(QDebug d, ImageConvertorSettings const& obj)
       << "zoom=" << obj.zoom()
       << "mean=" << obj.mean()
       << "std=" << obj.std()
+      << "countTestsForEstimate=" << obj.countTestsForEstimate()
       << "}";
 
     return d;

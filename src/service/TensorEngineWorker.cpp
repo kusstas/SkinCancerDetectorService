@@ -1,12 +1,28 @@
 #include "TensorEngineWorker.h"
 
+#include <QLoggingCategory>
+
+#include "engines/TensorEngine.h"
+
 
 namespace service
 {
+Q_LOGGING_CATEGORY(QLC_TENSOR_WORKER, "TensorEngineWorker")
+
+using Tensor = engines::TensorEngine::Tensor;
+
 TensorEngineWorker::TensorEngineWorker(std::shared_ptr<engines::TensorEngine> const& engine, QObject* parent)
     : QObject(parent)
     , m_engine(engine)
 {
+}
+
+TensorEngineWorker::~TensorEngineWorker()
+{
+    if (running())
+    {
+        stop();
+    }
 }
 
 bool TensorEngineWorker::running() const
@@ -21,12 +37,16 @@ int TensorEngineWorker::queueSize() const
 
 void TensorEngineWorker::start()
 {
+    qCInfo(QLC_TENSOR_WORKER) << "Start requiered";
+
     m_stop = false;
     m_thread = std::thread([this] {run();});
 }
 
 void TensorEngineWorker::stop()
 {
+    qCInfo(QLC_TENSOR_WORKER) << "Stop requiered";
+
     m_stop = true;
     m_notifier.notify_one();
     m_thread.join();
@@ -45,6 +65,8 @@ void TensorEngineWorker::setRunning(bool running)
     {
         return;
     }
+
+    qCInfo(QLC_TENSOR_WORKER) << "Set running state:" << running;
 
     m_running = running;
     emit runningChanged(m_running);
@@ -82,8 +104,8 @@ void TensorEngineWorker::run()
 
         QVector<Tensor> output(processedData.size() * m_engine->outputSize());
         if (!(loadData(processedData)
-              || m_engine->infer(processedData.size())
-              || m_engine->unloadOutput(processedData.size(), output.data())))
+            && m_engine->infer(processedData.size())
+            && m_engine->unloadOutput(processedData.size(), output.data())))
         {
             sendFailed(processedData);
             continue;
