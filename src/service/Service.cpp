@@ -149,8 +149,7 @@ qint64 Service::estimateNextRequest() const
     int const countImageProcessing = (m_imageConvertorWorker->queueSize() + 1);
     int const countTensorProcessing = countImageProcessing + m_tensorEngineWorker->queueSize();
 
-    int const batchesImageProcessing = countImageProcessing / m_imageConvertorWorker->maxThreads() +
-                                       static_cast<bool>(countImageProcessing % m_imageConvertorWorker->maxThreads());
+    int const batchesImageProcessing = countImageProcessing;
     int const batchesTensorProcessing = countTensorProcessing / m_tensorEngine->maxBatches() +
                                        static_cast<bool>(countTensorProcessing % m_tensorEngine->maxBatches());
 

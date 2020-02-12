@@ -68,7 +68,7 @@ qint64 ImageConvertor::estimate() const
     };
 
 
-    cv::Mat source(1920, 1080, CV_8UC3);
+    cv::Mat source(1000, 1000, CV_8UC3);
     if (source.empty())
     {
         return estimateFailed();
@@ -85,7 +85,7 @@ qint64 ImageConvertor::estimate() const
         }
     }
 
-    return estimateSuccess(timer.nsecsElapsed() / m_settings.countTestsForEstimate());
+    return estimateSuccess((timer.nsecsElapsed() / m_settings.countTestsForEstimate()) * 2);
 }
 
 QVector<cv::Mat> ImageConvertor::prepare(cv::Mat source) const
