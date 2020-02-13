@@ -49,7 +49,10 @@ void TensorEngineWorker::stop()
 
     m_stop = true;
     m_notifier.notify_one();
-    m_thread.join();
+    if (m_thread.joinable())
+    {
+        m_thread.join();
+    }
 }
 
 void TensorEngineWorker::push(quint64 id, QVector<cv::Mat> const& data)
