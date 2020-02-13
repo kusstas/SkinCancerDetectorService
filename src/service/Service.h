@@ -18,6 +18,9 @@ class ServiceSettings;
 class TensorEngineWorker;
 class ImageConvertorWorker;
 
+/**
+ * @brief The Service class - receiver of request
+ */
 class Service : protected SkinCancerDetectorServiceSource
 {
     Q_OBJECT
@@ -25,10 +28,24 @@ class Service : protected SkinCancerDetectorServiceSource
 public:
     explicit Service(QObject* parent = nullptr);
 
+    /**
+     * @brief start all components
+     */
     void start();
 
 protected:
+    /**
+     * @brief request from client
+     * @param id - request id
+     * @param image - bin data of image
+     */
     void request(quint64 id, QByteArray image) override;
+
+    /**
+     * @brief request from client
+     * @param id - request id
+     * @param imagePath - path to local image
+     */
     void request(quint64 id, QString imagePath) override;
 
 private:
