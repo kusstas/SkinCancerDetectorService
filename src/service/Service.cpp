@@ -91,7 +91,10 @@ void Service::setupService(ServiceSettings const* settings)
     }
 
     // create image convertor worker
-    m_imageConvertorWorker = new ImageConvertorWorker(m_imageConvertor, settings->maxImageConvertorThreads(), this);
+    auto const maxThreads = settings->maxImageConvertorThreads() > 0
+            ? settings->maxImageConvertorThreads()
+            : std::thread::hardware_concurrency();
+    m_imageConvertorWorker = new ImageConvertorWorker(m_imageConvertor, maxThreads, this);
 
     // create tensor engine worker
     m_tensorEngineWorker = new TensorEngineWorker(m_tensorEngine, this);

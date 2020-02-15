@@ -27,6 +27,7 @@ public:
 
     /**
      * @brief max image convertor threads
+     * if less than zero will be equal hardware value
      * @return
      */
     size_t maxImageConvertorThreads() const;
@@ -39,7 +40,6 @@ public:
 
     /**
      * @brief set max image convertor threads
-     * @warning should be greater than 0
      */
     void setMaxImageConvertorThreads(size_t maxImageConvertorThreads);
 
