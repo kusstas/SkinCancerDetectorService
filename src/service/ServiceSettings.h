@@ -30,7 +30,7 @@ public:
      * if less than zero will be equal hardware value
      * @return
      */
-    size_t maxImageConvertorThreads() const;
+    int maxImageConvertorThreads() const;
 
     /**
      * @brief set url
@@ -41,10 +41,10 @@ public:
     /**
      * @brief set max image convertor threads
      */
-    void setMaxImageConvertorThreads(size_t maxImageConvertorThreads);
+    void setMaxImageConvertorThreads(int maxImageConvertorThreads);
 
 private:
     QUrl m_url{};
-    size_t m_maxImageConvertorThreads = 0;
+    int m_maxImageConvertorThreads = 0;
 };
 }

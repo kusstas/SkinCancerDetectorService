@@ -7,7 +7,7 @@
 
 namespace service
 {
-Q_LOGGING_CATEGORY(QLC_IMAGE_WORKER, "TensorEngineWorker")
+Q_LOGGING_CATEGORY(QLC_IMAGE_WORKER, "ImageConvertorWorker")
 
 class CommonRunnable : public QRunnable
 {
