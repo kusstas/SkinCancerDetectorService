@@ -28,6 +28,12 @@ Service::Service(QObject* parent)
     estimate();
 }
 
+Service::~Service()
+{
+    m_imageConvertorWorker->stop();
+    m_tensorEngineWorker->stop();
+}
+
 void Service::start()
 {
     m_imageConvertorWorker->start();

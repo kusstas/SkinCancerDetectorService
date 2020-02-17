@@ -1,7 +1,7 @@
 {
     "service" : {
         "url" : "local:skin_cancer_detector",
-        "maxImageConvertorThreads" : 8
+        "maxImageConvertorThreads" : -1
     },
     "tensor" : {
        "maxWorkspaceSize" : 1048576,

@@ -124,28 +124,66 @@ engines::ImageConvertor* ImageConvertorWorker::imageConvertor() const
 
 void ImageConvertorWorker::start()
 {
+    if (running())
+    {
+        qCWarning(QLC_IMAGE_WORKER) << "Already started";
+        return;
+    }
+    if (m_stop)
+    {
+        qCWarning(QLC_IMAGE_WORKER) << "Stop in proggress";
+        return;
+    }
+
     qCInfo(QLC_IMAGE_WORKER) << "Start requiered, max threads:" << m_pool.maxThreadCount();
+
+    m_stop = false;
     setRunning(true);
 }
 
 void ImageConvertorWorker::stop()
 {
+    if (!running())
+    {
+        qCWarning(QLC_IMAGE_WORKER) << "Not started";
+        return;
+    }
+    if (m_stop)
+    {
+        qCWarning(QLC_IMAGE_WORKER) << "Stop already requiered";
+        return;
+    }
+
     qCInfo(QLC_IMAGE_WORKER) << "Stop requiered";
 
+    m_stop = true;
     m_pool.waitForDone();
     setRunning(false);
 }
 
+template <typename Runnuble, typename T>
+void ImageConvertorWorker::push(quint64 id, T const& data)
+{
+    if (m_stop)
+    {
+        qCWarning(QLC_IMAGE_WORKER) << "Reject request by stop" << id;
+        error(id);
+    }
+    else
+    {
+        m_queueSize++;
+        m_pool.start(new Runnuble(id, data, this));
+    }
+}
+
 void ImageConvertorWorker::push(quint64 id, QByteArray const& data)
 {
-    m_queueSize++;
-    m_pool.start(new BinImageRunnable(id, data, this));
+    push<BinImageRunnable>(id, data);
 }
 
 void ImageConvertorWorker::push(quint64 id, QString const& path)
 {
-    m_queueSize++;
-    m_pool.start(new PathImageRunnable(id, path, this));
+    push<PathImageRunnable>(id, path);
 }
 
 void ImageConvertorWorker::setRunning(bool running)

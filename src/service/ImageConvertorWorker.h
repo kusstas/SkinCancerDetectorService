@@ -103,9 +103,13 @@ signals:
 private:
     void setRunning(bool running);
 
+    template <typename Runnuble, typename T>
+    void push(quint64 id, T const& data);
+
 private:
     std::shared_ptr<engines::ImageConvertor> m_imageConvertor = nullptr;
     bool m_running = false;
+    bool m_stop = false;
     std::atomic_size_t m_queueSize = 0;
 
     QThreadPool m_pool{};

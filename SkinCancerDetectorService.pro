@@ -2,7 +2,9 @@ QT -= gui
 QT += remoteobjects
 
 CONFIG += c++17 console
+CONFIG += file_copies
 CONFIG -= app_bundle
+
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
@@ -31,6 +33,12 @@ SOURCES += \
 
 REPC_SOURCE += \
     src/service/SkinCancerDetectorService.rep
+
+
+COPIES += utils_files
+
+utils_files.files = $$PWD/utils/run.sh $$files($$PWD/resources/*)
+utils_files.path = $$OUT_PWD
 
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

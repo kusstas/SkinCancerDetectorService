@@ -37,6 +37,17 @@ int TensorEngineWorker::queueSize() const
 
 void TensorEngineWorker::start()
 {
+    if (running())
+    {
+        qCWarning(QLC_TENSOR_WORKER) << "Already started";
+        return;
+    }
+    if (m_stop)
+    {
+        qCWarning(QLC_TENSOR_WORKER) << "Stop in proggress";
+        return;
+    }
+
     qCInfo(QLC_TENSOR_WORKER) << "Start requiered";
 
     m_stop = false;
@@ -45,6 +56,17 @@ void TensorEngineWorker::start()
 
 void TensorEngineWorker::stop()
 {
+    if (!running())
+    {
+        qCWarning(QLC_TENSOR_WORKER) << "Not started";
+        return;
+    }
+    if (m_stop)
+    {
+        qCWarning(QLC_TENSOR_WORKER) << "Stop already requiered";
+        return;
+    }
+
     qCInfo(QLC_TENSOR_WORKER) << "Stop requiered";
 
     m_stop = true;
@@ -57,9 +79,17 @@ void TensorEngineWorker::stop()
 
 void TensorEngineWorker::push(quint64 id, QVector<cv::Mat> const& data)
 {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    m_requests.append({id, data});
-    m_notifier.notify_one();
+    if (m_stop)
+    {
+        qCWarning(QLC_TENSOR_WORKER) << "Reject request by stop" << id;
+        error(id);
+    }
+    else
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_requests.append({id, data});
+        m_notifier.notify_one();
+    }
 }
 
 void TensorEngineWorker::setRunning(bool running)
@@ -107,8 +137,8 @@ void TensorEngineWorker::run()
 
         QVector<Tensor> output(processedData.size() * m_engine->outputSize());
         if (!(loadData(processedData)
-            && m_engine->infer(processedData.size())
-            && m_engine->unloadOutput(processedData.size(), output.data())))
+              && m_engine->infer(processedData.size())
+              && m_engine->unloadOutput(processedData.size(), output.data())))
         {
             sendFailed(processedData);
             continue;

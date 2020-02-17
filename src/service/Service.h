@@ -27,6 +27,7 @@ class Service : protected SkinCancerDetectorServiceSource
 
 public:
     explicit Service(QObject* parent = nullptr);
+    ~Service() override;
 
     /**
      * @brief start all components
