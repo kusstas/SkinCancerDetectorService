@@ -56,6 +56,20 @@ void Service::request(quint64 id, QString imagePath)
     m_imageConvertorWorker->push(id, imagePath);
 }
 
+void Service::onSuccess(quint64 id, float positive, float negative)
+{
+    qCInfo(QLC_SERVICE) << "Request handled successfully, id:" << id << "positive:" << positive << "negative:" << negative;
+
+    emit resultReady(id, Result{positive, negative});
+}
+
+void Service::onError(quint64 id)
+{
+    qCInfo(QLC_SERVICE) << "Request was failed, id:" << id;
+
+    emit resultFailed(id);
+}
+
 void Service::createComponents()
 {
     SettingsReader settingsReader;
@@ -98,20 +112,17 @@ void Service::setupService(ServiceSettings const* settings)
 
     // create image convertor worker
     auto const maxThreads = settings->maxImageConvertorThreads() > 0
-            ? settings->maxImageConvertorThreads()
-            : std::thread::hardware_concurrency();
+                            ? settings->maxImageConvertorThreads()
+                            : std::thread::hardware_concurrency();
     m_imageConvertorWorker = new ImageConvertorWorker(m_imageConvertor, maxThreads, this);
 
     // create tensor engine worker
     m_tensorEngineWorker = new TensorEngineWorker(m_tensorEngine, this);
 
     connect(m_imageConvertorWorker, &ImageConvertorWorker::result, m_tensorEngineWorker, &TensorEngineWorker::push, Qt::DirectConnection);
-    connect(m_imageConvertorWorker, &ImageConvertorWorker::error, this, &Service::resultFailed);
-    connect(m_tensorEngineWorker, &TensorEngineWorker::result, this, [this] (quint64 id, float positive, float negative)
-    {
-        emit resultReady(id, Result{positive, negative});
-    });
-    connect(m_tensorEngineWorker, &TensorEngineWorker::error, this, &Service::resultFailed);
+    connect(m_imageConvertorWorker, &ImageConvertorWorker::error, this, &Service::onError);
+    connect(m_tensorEngineWorker, &TensorEngineWorker::result, this, &Service::onSuccess);
+    connect(m_tensorEngineWorker, &TensorEngineWorker::error, this, &Service::onError);
 
     // enable remoting
     enableRemoting(settings);
@@ -160,7 +171,7 @@ qint64 Service::estimateNextRequest() const
 
     int const batchesImageProcessing = countImageProcessing;
     int const batchesTensorProcessing = countTensorProcessing / m_tensorEngine->maxBatches() +
-                                       static_cast<bool>(countTensorProcessing % m_tensorEngine->maxBatches());
+                                        static_cast<bool>(countTensorProcessing % m_tensorEngine->maxBatches());
 
     auto const imageTimeProcessing = batchesImageProcessing * m_imageConvertorEstimate;
     auto const tensorTimeProcessing = batchesTensorProcessing * m_tensorEngineEstimate;

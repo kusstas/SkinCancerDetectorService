@@ -21,7 +21,7 @@ class ImageConvertorWorker;
 /**
  * @brief The Service class - receiver of request
  */
-class Service : protected SkinCancerDetectorServiceSource
+class Service : public SkinCancerDetectorServiceSource
 {
     Q_OBJECT
 
@@ -48,6 +48,10 @@ protected:
      * @param imagePath - path to local image
      */
     void request(quint64 id, QString imagePath) override;
+
+private slots:
+    void onSuccess(quint64 id, float positive, float negative);
+    void onError(quint64 id);
 
 private:
     void createComponents();

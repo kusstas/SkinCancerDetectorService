@@ -2,6 +2,7 @@
 
 #include <QLoggingCategory>
 #include <QElapsedTimer>
+#include <QFile>
 
 #include <exception>
 #include <vector>
@@ -29,6 +30,12 @@ ImageConvertor::ImageConvertor(ImageConvertorSettings const& settings)
 
 QVector<cv::Mat> ImageConvertor::convert(QByteArray const& data) const
 {
+    if (data.isEmpty())
+    {
+        qCCritical(QLC_IMAGE_CONVERTOR) << "Data is empty";
+        return {};
+    }
+
     cv::Mat source = cv::imdecode(cv::_InputArray(data.data(), data.size()), cv::IMREAD_COLOR);
 
     if (source.empty())
@@ -42,6 +49,12 @@ QVector<cv::Mat> ImageConvertor::convert(QByteArray const& data) const
 
 QVector<cv::Mat> ImageConvertor::convert(QString const& path) const
 {
+    if (!QFile(path).exists())
+    {
+        qCCritical(QLC_IMAGE_CONVERTOR) << "File not exists by path:" << path;
+        return {};
+    }
+
     cv::Mat source = cv::imread(qPrintable(path));
 
     if (source.empty())
