@@ -4,8 +4,8 @@
         "maxImageConvertorThreads" : -1
     },
     "tensor" : {
-       "maxWorkspaceSize" : 1048576,
-       "maxBatches" : 4,
+       "maxWorkspaceSize" : 2097152,
+       "maxBatches" : 8,
        "onnxFilePath" : "skin_cancer_detector.onnx",
        "serializedFilePath" : "skin_cancer_detector.pb",
        "countTestsForEstimate" : 10

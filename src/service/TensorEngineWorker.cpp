@@ -82,7 +82,7 @@ void TensorEngineWorker::push(quint64 id, QVector<cv::Mat> const& data)
     if (m_stop)
     {
         qCWarning(QLC_TENSOR_WORKER) << "Reject request by stop" << id;
-        error(id);
+        error(id, SkinCancerDetectorServiceSource::StopService);
     }
     else
     {
@@ -159,7 +159,7 @@ void TensorEngineWorker::sendFailed(QList<TensorEngineWorker::Request> const& da
 {
     for (auto const& request : data)
     {
-        emit error(request.id);
+        emit error(request.id, SkinCancerDetectorServiceSource::System);
     }
 }
 

@@ -51,7 +51,7 @@ protected:
 
 private slots:
     void onSuccess(quint64 id, float positive, float negative);
-    void onError(quint64 id);
+    void onError(quint64 id, ErrorType type);
 
 private:
     void createComponents();

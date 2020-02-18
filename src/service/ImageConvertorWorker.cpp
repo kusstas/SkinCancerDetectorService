@@ -1,9 +1,9 @@
 #include "ImageConvertorWorker.h"
 
+#include "engines/ImageConvertor.h"
+
 #include <QLoggingCategory>
 #include <QRunnable>
-
-#include "engines/ImageConvertor.h"
 
 namespace service
 {
@@ -31,7 +31,8 @@ public:
 
     void run() override
     {
-        auto const result = getResult();
+        engines::ImageConvertorTypeError error = engines::ImageConvertorTypeError::NoError;
+        auto const result = getResult(&error);
 
         if (!result.isEmpty())
         {
@@ -39,13 +40,13 @@ public:
         }
         else
         {
-            emit worker()->error(id());
+            emit worker()->error(id(), ImageConvertorWorker::convert(error));
         }
         worker()->m_queueSize--;
     }
 
 protected:
-    virtual QVector<cv::Mat> getResult() = 0;
+    virtual QVector<cv::Mat> getResult(engines::ImageConvertorTypeError* error) = 0;
 
 private:
     quint64 m_id = 0;
@@ -62,9 +63,9 @@ public:
     }
 
 protected:
-    QVector<cv::Mat> getResult() override
+    QVector<cv::Mat> getResult(engines::ImageConvertorTypeError* error) override
     {
-        return worker()->imageConvertor()->convert(m_data);
+        return worker()->imageConvertor()->convert(m_data, error);
     }
 
 private:
@@ -81,9 +82,9 @@ public:
     }
 
 protected:
-    QVector<cv::Mat> getResult() override
+    QVector<cv::Mat> getResult(engines::ImageConvertorTypeError* error) override
     {
-        return worker()->imageConvertor()->convert(m_path);
+        return worker()->imageConvertor()->convert(m_path, error);
     }
 
 private:
@@ -167,7 +168,7 @@ void ImageConvertorWorker::push(quint64 id, T const& data)
     if (m_stop)
     {
         qCWarning(QLC_IMAGE_WORKER) << "Reject request by stop" << id;
-        error(id);
+        error(id, SkinCancerDetectorServiceSource::StopService);
     }
     else
     {
@@ -197,5 +198,31 @@ void ImageConvertorWorker::setRunning(bool running)
 
     m_running = running;
     emit runningChanged(m_running);
+}
+
+SkinCancerDetectorServiceSource::ErrorType ImageConvertorWorker::convert(engines::ImageConvertorTypeError type)
+{
+    using ICTE = engines::ImageConvertorTypeError;
+
+    switch (type) {
+    case ICTE::NoError:
+        return SkinCancerDetectorServiceSource::NoError;
+    case ICTE::DataIsEmpty:
+        return SkinCancerDetectorServiceSource::DataIsEmpty;
+    case ICTE::FileNotExist:
+        return SkinCancerDetectorServiceSource::FileNotExist;
+    case ICTE::ImpossibleDecode:
+        return SkinCancerDetectorServiceSource::ImpossibleDecode;
+    case ICTE::MismatchCountChannels:
+        return SkinCancerDetectorServiceSource::MismatchCountChannels;
+    case ICTE::TooSmallImageSize:
+        return SkinCancerDetectorServiceSource::TooSmallImageSize;
+    case ICTE::System:
+        return SkinCancerDetectorServiceSource::System;
+    default:
+        break;
+    }
+
+    return SkinCancerDetectorServiceSource::System;
 }
 }

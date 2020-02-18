@@ -28,10 +28,11 @@ ImageConvertor::ImageConvertor(ImageConvertorSettings const& settings)
     qCInfo(QLC_IMAGE_CONVERTOR) << "Settings -" << settings;
 }
 
-QVector<cv::Mat> ImageConvertor::convert(QByteArray const& data) const
+QVector<cv::Mat> ImageConvertor::convert(QByteArray const& data, ImageConvertorTypeError* error) const
 {
     if (data.isEmpty())
     {
+        writeError(error, ImageConvertorTypeError::DataIsEmpty);
         qCCritical(QLC_IMAGE_CONVERTOR) << "Data is empty";
         return {};
     }
@@ -40,17 +41,19 @@ QVector<cv::Mat> ImageConvertor::convert(QByteArray const& data) const
 
     if (source.empty())
     {
+        writeError(error, ImageConvertorTypeError::ImpossibleDecode);
         qCCritical(QLC_IMAGE_CONVERTOR) << "Cannot decode image from binary";
         return {};
     }
 
-    return prepare(source);
+    return prepare(source, error);
 }
 
-QVector<cv::Mat> ImageConvertor::convert(QString const& path) const
+QVector<cv::Mat> ImageConvertor::convert(QString const& path, ImageConvertorTypeError* error) const
 {
     if (!QFile(path).exists())
     {
+        writeError(error, ImageConvertorTypeError::FileNotExist);
         qCCritical(QLC_IMAGE_CONVERTOR) << "File not exists by path:" << path;
         return {};
     }
@@ -59,11 +62,12 @@ QVector<cv::Mat> ImageConvertor::convert(QString const& path) const
 
     if (source.empty())
     {
+        writeError(error, ImageConvertorTypeError::ImpossibleDecode);
         qCCritical(QLC_IMAGE_CONVERTOR) << "Cannot open image by path" << path;
         return {};
     }
 
-    return prepare(source);
+    return prepare(source, error);
 }
 
 qint64 ImageConvertor::estimate() const
@@ -101,12 +105,20 @@ qint64 ImageConvertor::estimate() const
     return estimateSuccess((timer.nsecsElapsed() / m_settings.countTestsForEstimate()) * 2);
 }
 
-QVector<cv::Mat> ImageConvertor::prepare(cv::Mat source) const
+QVector<cv::Mat> ImageConvertor::prepare(cv::Mat source, ImageConvertorTypeError* error) const
 {
     if (source.channels() != m_settings.channels())
     {
+        writeError(error, ImageConvertorTypeError::MismatchCountChannels);
         qCCritical(QLC_IMAGE_CONVERTOR) << "Mismacth count channels, setted:" << m_settings.channels()
                                         << "in source:" << source.channels();
+        return {};
+    }
+
+    if (source.size().width < m_settings.width() || source.size().height < m_settings.height())
+    {
+        writeError(error, ImageConvertorTypeError::TooSmallImageSize);
+        qCCritical(QLC_IMAGE_CONVERTOR) << "Too small image size";
         return {};
     }
 
@@ -180,5 +192,13 @@ cv::Size ImageConvertor::getAutoCropSize(cv::Size const& source) const
     }
 
     return crop;
+}
+
+void ImageConvertor::writeError(ImageConvertorTypeError* dst, ImageConvertorTypeError error)
+{
+    if (dst)
+    {
+        *dst = error;
+    }
 }
 }

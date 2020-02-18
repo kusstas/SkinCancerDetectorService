@@ -63,11 +63,11 @@ void Service::onSuccess(quint64 id, float positive, float negative)
     emit resultReady(id, Result{positive, negative});
 }
 
-void Service::onError(quint64 id)
+void Service::onError(quint64 id, ErrorType type)
 {
-    qCInfo(QLC_SERVICE) << "Request was failed, id:" << id;
+    qCInfo(QLC_SERVICE) << "Request was failed, id:" << id << "type:" << QMetaEnum::fromType<ErrorType>().key(type);
 
-    emit resultFailed(id);
+    emit resultFailed(id, type);
 }
 
 void Service::createComponents()

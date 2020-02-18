@@ -7,9 +7,12 @@
 #include <memory>
 #include <opencv2/core/mat.hpp>
 
+#include <rep_SkinCancerDetectorService_source.h>
+
 
 namespace engines
 {
+enum class ImageConvertorTypeError;
 class ImageConvertor;
 }
 
@@ -97,14 +100,17 @@ signals:
     /**
      * @brief error signal
      * @param id - id of requst
+     * @param type - type of error
      */
-    void error(quint64 id);
+    void error(quint64 id, SkinCancerDetectorServiceSource::ErrorType type);
 
 private:
     void setRunning(bool running);
 
     template <typename Runnuble, typename T>
     void push(quint64 id, T const& data);
+
+    static SkinCancerDetectorServiceSource::ErrorType convert(engines::ImageConvertorTypeError type);
 
 private:
     std::shared_ptr<engines::ImageConvertor> m_imageConvertor = nullptr;

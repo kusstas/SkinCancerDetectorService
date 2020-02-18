@@ -6,9 +6,11 @@ POD Result(float positive, float negative)
 
 class SkinCancerDetectorService
 {
+    ENUM ErrorType {NoError, StopService, DataIsEmpty, FileNotExist, ImpossibleDecode, MismatchCountChannels, TooSmallImageSize, System}
+
     SLOT(request(quint64 id, QByteArray image))
     SLOT(request(quint64 id, QString imagePath))
     SIGNAL(estimatesReady(quint64 id, qint64 milliseconds))
     SIGNAL(resultReady(quint64 id, Result result))
-    SIGNAL(resultFailed(quint64 id))
+    SIGNAL(resultFailed(quint64 id, ErrorType error))
 };

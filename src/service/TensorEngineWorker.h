@@ -10,6 +10,8 @@
 
 #include <opencv2/core/mat.hpp>
 
+#include <rep_SkinCancerDetectorService_source.h>
+
 
 namespace engines
 {
@@ -78,7 +80,7 @@ signals:
      * @brief error signal
      * @param id - request id
      */
-    void error(quint64 id);
+    void error(quint64 id, SkinCancerDetectorServiceSource::ErrorType type);
 
 private:
     struct Request
