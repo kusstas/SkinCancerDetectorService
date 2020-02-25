@@ -40,27 +40,35 @@ void Service::start()
     m_tensorEngineWorker->start();
 }
 
-void Service::request(quint64 id, QByteArray image)
+SkinCancerDetectorRequestInfo Service::request(QByteArray image)
 {
-    qCInfo(QLC_SERVICE) << "Request received:" << id << "data size" << image.size();
+    auto const id = getRequestId();
+    auto const estimates = estimateNextRequest();
 
-    emit estimatesReady(id, estimateNextRequest());
+    qCInfo(QLC_SERVICE) << "Request received:" << id << "data size" << image.size() << "estimates" << estimates;
+
     m_imageConvertorWorker->push(id, image);
+
+    return SkinCancerDetectorRequestInfo{id, estimates};
 }
 
-void Service::request(quint64 id, QString imagePath)
+SkinCancerDetectorRequestInfo Service::request(QString imagePath)
 {
-    qCInfo(QLC_SERVICE) << "Request received:" << id << "image path" << imagePath;
+    auto const id = getRequestId();
+    auto const estimates = estimateNextRequest();
 
-    emit estimatesReady(id, estimateNextRequest());
+    qCInfo(QLC_SERVICE) << "Request received:" << id << "image path" << imagePath << "estimates" << estimates;
+
     m_imageConvertorWorker->push(id, imagePath);
+
+    return SkinCancerDetectorRequestInfo{id, estimates};
 }
 
 void Service::onSuccess(quint64 id, float positive, float negative)
 {
     qCInfo(QLC_SERVICE) << "Request handled successfully, id:" << id << "positive:" << positive << "negative:" << negative;
 
-    emit resultReady(id, Result{positive, negative});
+    emit resultReady(id, SkinCancerDetectorResult{positive, negative});
 }
 
 void Service::onError(quint64 id, ErrorType type)
@@ -177,5 +185,10 @@ qint64 Service::estimateNextRequest() const
     auto const tensorTimeProcessing = batchesTensorProcessing * m_tensorEngineEstimate;
 
     return (imageTimeProcessing + tensorTimeProcessing) / 1000000;
+}
+
+quint64 Service::getRequestId()
+{
+    return ++m_requestId;
 }
 }

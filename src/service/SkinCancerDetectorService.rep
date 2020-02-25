@@ -2,15 +2,15 @@
 #include <QByteArray>
 
 
-POD Result(float positive, float negative)
+POD SkinCancerDetectorRequestInfo(quint64 id, qint64 estimateMs)
+POD SkinCancerDetectorResult(float positive, float negative)
 
 class SkinCancerDetectorService
 {
     ENUM ErrorType {NoError, StopService, DataIsEmpty, FileNotExist, ImpossibleDecode, MismatchCountChannels, TooSmallImageSize, System}
 
-    SLOT(request(quint64 id, QByteArray image))
-    SLOT(request(quint64 id, QString imagePath))
-    SIGNAL(estimatesReady(quint64 id, qint64 milliseconds))
-    SIGNAL(resultReady(quint64 id, Result result))
+    SLOT(SkinCancerDetectorRequestInfo request(QByteArray image))
+    SLOT(SkinCancerDetectorRequestInfo request(QString imagePath))
+    SIGNAL(resultReady(quint64 id, SkinCancerDetectorResult result))
     SIGNAL(resultFailed(quint64 id, ErrorType error))
 };

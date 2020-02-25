@@ -37,17 +37,17 @@ public:
 protected:
     /**
      * @brief request from client
-     * @param id - request id
      * @param image - bin data of image
+     * @return request info (id - request id, estimateMs - estimated time in ms for handle request, netgative - invalid value)
      */
-    void request(quint64 id, QByteArray image) override;
+    SkinCancerDetectorRequestInfo request(QByteArray image) override;
 
     /**
      * @brief request from client
-     * @param id - request id
      * @param imagePath - path to local image
+     * @return request info (id - request id, estimateMs - estimated time in ms for handle request, netgative - invalid value)
      */
-    void request(quint64 id, QString imagePath) override;
+    SkinCancerDetectorRequestInfo request(QString imagePath) override;
 
 private slots:
     void onSuccess(quint64 id, float positive, float negative);
@@ -61,6 +61,7 @@ private:
     void estimate();
 
     qint64 estimateNextRequest() const;
+    quint64 getRequestId();
 
 private:
     std::shared_ptr<engines::TensorEngine> m_tensorEngine = nullptr;
@@ -71,5 +72,6 @@ private:
 
     qint64 m_tensorEngineEstimate = -1;
     qint64 m_imageConvertorEstimate = -1;
+    quint64 m_requestId = 0;
 };
 }
