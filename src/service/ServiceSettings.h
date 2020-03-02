@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/ISettings.h"
+
 #include <QUrl>
 
 
@@ -8,16 +10,10 @@ namespace service
 /**
  * @brief The ServiceSettings class - setting for create service
  */
-class ServiceSettings
+class ServiceSettings : public common::ISettings
 {
 public:
     ServiceSettings() = default;
-
-    /**
-     * @brief valid - settings is valid
-     * @return bool value
-     */
-    bool valid() const;
 
     /**
      * @brief url - url of service for connecting clients
@@ -32,16 +28,11 @@ public:
      */
     int maxImageConvertorThreads() const;
 
-    /**
-     * @brief set url
-     * @param url
-     */
-    void setUrl(QUrl const& url);
+public: // IJsonParsed interface
+    bool parse(const QJsonObject &json) override;
 
-    /**
-     * @brief set max image convertor threads
-     */
-    void setMaxImageConvertorThreads(int maxImageConvertorThreads);
+public: // ISettings interface
+    bool valid() const override;
 
 private:
     QUrl m_url{};

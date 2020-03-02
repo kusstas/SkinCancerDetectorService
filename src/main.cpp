@@ -13,7 +13,6 @@ int main(int argn, char* argv[])
     QCoreApplication app(argn, argv);
 
     service::Service service;
-
     service.start();
 
     return app.exec();

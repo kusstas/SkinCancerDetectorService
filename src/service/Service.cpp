@@ -1,15 +1,12 @@
 #include "Service.h"
 
-#include <QRemoteObjectHost>
-
-#include <QLoggingCategory>
-
-#include "SettingsReader.h"
+#include "utils/ServiceLocator.h"
+#include "utils/SettingsReader.h"
 #include "TensorEngineWorker.h"
 #include "ImageConvertorWorker.h"
 
-#include "engines/TensorEngine.h"
-#include "engines/ImageConvertor.h"
+#include <QRemoteObjectHost>
+#include <QLoggingCategory>
 
 
 static constexpr auto SETTINGS_PATH = "settings.json";
@@ -19,13 +16,14 @@ namespace service
 {
 Q_LOGGING_CATEGORY(QLC_SERVICE, "Service")
 
+static utils::ServiceLocator serviceLocator;
+
+
 Service::Service(QObject* parent)
     : SkinCancerDetectorServiceSource(parent)
 {
-    qRegisterMetaType<QVector<cv::Mat>>("QVectorCvMat");
-
+    serviceLocator.init();
     createComponents();
-    estimate();
 }
 
 Service::~Service()
@@ -80,38 +78,62 @@ void Service::onError(quint64 id, ErrorType type)
 
 void Service::createComponents()
 {
-    SettingsReader settingsReader;
+    utils::SettingsReader settingsReader;
 
-    auto settings = settingsReader.read(SETTINGS_PATH);
+    auto settings = settingsReader.read();
 
-    if (!settings.success)
+    if (!settings || settings->valid())
     {
         auto const message = "Reading settings failed";
         qCCritical(QLC_SERVICE) << message;
         throw std::runtime_error(message);
     }
 
-    // create tensor engine
-    m_tensorEngine.reset(new engines::TensorEngine(settings.tensorEngine));
+    serviceLocator.setTensorEngineType(settings->tensor.type());
 
-    // create image convertor
-    setupImageConvertorSettings(&settings.imageConvertor);
-    m_imageConvertor.reset(new engines::ImageConvertor(settings.imageConvertor));
+    // create tensor engine
+    auto tensorEngine = serviceLocator.createTensorEngine();
+    if (!tensorEngine)
+    {
+        auto const message = QString("Cannot create tensor engine by type: %1").arg(settings->tensor.type());
+        qCCritical(QLC_SERVICE) << qPrintable(message);
+        throw std::runtime_error(qPrintable(message));
+    }
+    else if (!tensorEngine->load(settings->tensor))
+    {
+        auto const message = "Cannot load tensor engine settings";
+        qCCritical(QLC_SERVICE) << message;
+        throw std::runtime_error(message);
+    }
+
+    settings->image.setWidth(tensorEngine->inputWidth());
+    settings->image.setHeight(tensorEngine->inputHeight());
+    settings->image.setChannels(tensorEngine->inputChannels());
+
+    auto imageConvertor = serviceLocator.createImageConvertor();
+    if (!imageConvertor)
+    {
+        auto const message = "Cannot create image convertor";
+        qCCritical(QLC_SERVICE) << message;
+        throw std::runtime_error(message);
+    }
+    else if (!imageConvertor->load(settings->image))
+    {
+        auto const message = "Cannot image convertor settings";
+        qCCritical(QLC_SERVICE) << message;
+        throw std::runtime_error(message);
+    }
 
     // setup service
-    setupService(&settings.service);
+    setupService(settings->service, tensorEngine, imageConvertor);
+    estimate(imageConvertor.get(), tensorEngine.get());
 }
 
-void Service::setupImageConvertorSettings(engines::ImageConvertorSettings* settings) const
+void Service::setupService(ServiceSettings const& settings,
+                           engines::ITensorEnginePtr const& tensorEngine,
+                           image::IImageConvertorPtr const& imageConvertor)
 {
-    settings->setHeight(m_tensorEngine->inputHeight());
-    settings->setWidth(m_tensorEngine->inputWidth());
-    settings->setChannels(m_tensorEngine->inputChannels());
-}
-
-void Service::setupService(ServiceSettings const* settings)
-{
-    if (!settings->valid())
+    if (!settings.valid())
     {
         auto const message = "Service settings is invalid";
         qCCritical(QLC_SERVICE) << message;
@@ -119,13 +141,13 @@ void Service::setupService(ServiceSettings const* settings)
     }
 
     // create image convertor worker
-    auto const maxThreads = settings->maxImageConvertorThreads() > 0
-                            ? settings->maxImageConvertorThreads()
-                            : std::thread::hardware_concurrency();
-    m_imageConvertorWorker = new ImageConvertorWorker(m_imageConvertor, maxThreads, this);
+    auto const maxThreads = settings.maxImageConvertorThreads() > 0
+            ? settings.maxImageConvertorThreads()
+            : std::thread::hardware_concurrency();
+    m_imageConvertorWorker = new ImageConvertorWorker(imageConvertor, maxThreads, this);
 
     // create tensor engine worker
-    m_tensorEngineWorker = new TensorEngineWorker(m_tensorEngine, this);
+    m_tensorEngineWorker = new TensorEngineWorker(tensorEngine, this);
 
     connect(m_imageConvertorWorker, &ImageConvertorWorker::result, m_tensorEngineWorker, &TensorEngineWorker::push, Qt::DirectConnection);
     connect(m_imageConvertorWorker, &ImageConvertorWorker::error, this, &Service::onError);
@@ -136,16 +158,16 @@ void Service::setupService(ServiceSettings const* settings)
     enableRemoting(settings);
 }
 
-void Service::enableRemoting(ServiceSettings const* settings)
+void Service::enableRemoting(ServiceSettings const& settings)
 {
-    qCInfo(QLC_SERVICE) << "Trying to enable remoting" << settings->url();
+    qCInfo(QLC_SERVICE) << "Trying to enable remoting" << settings.url();
 
-    auto const node = new QRemoteObjectHost(settings->url(), this);
+    auto const node = new QRemoteObjectHost(settings.url(), this);
 
     if(!node->enableRemoting(this))
     {
         auto const message = QString("Enable remoting failed: ")
-                             + QMetaEnum::fromType<QRemoteObjectHost::ErrorCode>().valueToKey(node->lastError());
+                + QMetaEnum::fromType<QRemoteObjectHost::ErrorCode>().valueToKey(node->lastError());
         qCCritical(QLC_SERVICE) << message;
         throw std::runtime_error(qPrintable(message));
     }
@@ -153,9 +175,9 @@ void Service::enableRemoting(ServiceSettings const* settings)
     qCInfo(QLC_SERVICE) << "Remoting enabled successfully";
 }
 
-void Service::estimate()
+void Service::estimate(common::IEstimated* imageConvertor, common::IEstimated* tensorEngine)
 {
-    m_imageConvertorEstimate = m_imageConvertor->estimate();
+    m_imageConvertorEstimate = imageConvertor->estimate();
     if (m_imageConvertorEstimate < 0)
     {
         auto const message = "Failed to estimate image convertor";
@@ -163,7 +185,7 @@ void Service::estimate()
         throw std::runtime_error(message);
     }
 
-    m_tensorEngineEstimate = m_tensorEngine->estimateInfer();
+    m_tensorEngineEstimate = tensorEngine->estimate();
     if (m_tensorEngineEstimate < 0)
     {
         auto const message = "Failed to estimate tensor engine";
@@ -178,8 +200,8 @@ qint64 Service::estimateNextRequest() const
     int const countTensorProcessing = countImageProcessing + m_tensorEngineWorker->queueSize();
 
     int const batchesImageProcessing = countImageProcessing;
-    int const batchesTensorProcessing = countTensorProcessing / m_tensorEngine->maxBatches() +
-                                        static_cast<bool>(countTensorProcessing % m_tensorEngine->maxBatches());
+    int const batchesTensorProcessing = countTensorProcessing / m_tensorEngineWorker->maxBatches() +
+            static_cast<bool>(countTensorProcessing % m_tensorEngineWorker->maxBatches());
 
     auto const imageTimeProcessing = batchesImageProcessing * m_imageConvertorEstimate;
     auto const tensorTimeProcessing = batchesTensorProcessing * m_tensorEngineEstimate;

@@ -3,12 +3,21 @@
         "url" : "local:skin_cancer_detector",
         "maxImageConvertorThreads" : -1
     },
-    "tensor" : {
-       "maxWorkspaceSize" : 2097152,
-       "maxBatches" : 8,
-       "onnxFilePath" : "skin_cancer_detector.onnx",
-       "serializedFilePath" : "skin_cancer_detector.pb",
-       "countTestsForEstimate" : 10
+    "nn" : {
+        "type" : "TensorRt",
+        "maxBatches" : 8,
+        "countTestsForEstimate" : 10,
+
+        "TensorRt" : {
+           "maxWorkspaceSize" : 2097152,
+           "onnxFilePath" : "skin_cancer_detector.onnx",
+           "serializedFilePath" : "skin_cancer_detector.pb"
+        },
+
+        "Torch" : {
+            "modelPath" : "",
+            "device" : "gpu"
+        }
     },
     "image" : {
         "mean" : [0.485, 0.456, 0.406],

@@ -8,15 +8,11 @@
 #include <mutex>
 #include <condition_variable>
 
-#include <opencv2/core/mat.hpp>
-
 #include <rep_SkinCancerDetectorService_source.h>
 
+#include "common/IEngineInputData.h"
+#include "engines/ITensorEngine.h"
 
-namespace engines
-{
-class TensorEngine;
-}
 
 namespace service
 {
@@ -30,7 +26,7 @@ class TensorEngineWorker : public QObject
     Q_PROPERTY(bool running READ running NOTIFY runningChanged)
 
 public:
-    explicit TensorEngineWorker(std::shared_ptr<engines::TensorEngine> const& engine, QObject* parent = nullptr);
+    explicit TensorEngineWorker(engines::ITensorEnginePtr const& engine, QObject* parent = nullptr);
     ~TensorEngineWorker();
 
     /**
@@ -44,6 +40,12 @@ public:
      * @return size
      */
     int queueSize() const;
+
+    /**
+     * @brief max batches
+     * @return
+     */
+    size_t maxBatches() const;
 
 public slots:
     /**
@@ -61,7 +63,7 @@ public slots:
      * @param id - request id
      * @param data
      */
-    void push(quint64 id, QVector<cv::Mat> const& data);
+    void push(quint64 id, common::IEngineInputDataPtr const& data);
 
 signals:
     /**
@@ -86,7 +88,7 @@ private:
     struct Request
     {
         quint64 id;
-        QVector<cv::Mat> data;
+        common::IEngineInputDataPtr data;
     };
 
 private:
@@ -97,7 +99,7 @@ private:
     bool loadData(QList<Request> const& data);
 
 private:
-    std::shared_ptr<engines::TensorEngine> m_engine = nullptr;
+    engines::ITensorEnginePtr m_engine = nullptr;
 
     std::thread m_thread{};
     std::mutex m_mutex{};

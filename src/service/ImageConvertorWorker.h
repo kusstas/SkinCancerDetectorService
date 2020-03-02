@@ -5,15 +5,14 @@
 
 #include <atomic>
 #include <memory>
-#include <opencv2/core/mat.hpp>
 
 #include <rep_SkinCancerDetectorService_source.h>
+#include "image/IImageConvertor.h"
 
 
-namespace engines
+namespace image
 {
 enum class ImageConvertorTypeError;
-class ImageConvertor;
 }
 
 namespace service
@@ -30,7 +29,9 @@ class ImageConvertorWorker : public QObject
     friend class CommonRunnable;
 
 public:
-    explicit ImageConvertorWorker(std::shared_ptr<engines::ImageConvertor> const& imageConvertor, size_t maxThreads, QObject* parent = nullptr);
+    explicit ImageConvertorWorker(image::IImageConvertorPtr const& imageConvertor,
+                                  size_t maxThreads,
+                                  QObject* parent = nullptr);
     ~ImageConvertorWorker();
 
     /**
@@ -55,7 +56,7 @@ public:
      * @brief image convertor
      * @return
      */
-    engines::ImageConvertor* imageConvertor() const;
+    image::IImageConvertorPtr const& imageConvertor() const;
 
 public slots:
     /**
@@ -95,7 +96,7 @@ signals:
      * @param id - id of requst
      * @param data - result
      */
-    void result(quint64 id, QVector<cv::Mat> const& data);
+    void result(quint64 id, common::IEngineInputDataPtr const& data);
 
     /**
      * @brief error signal
@@ -110,10 +111,10 @@ private:
     template <typename Runnuble, typename T>
     void push(quint64 id, T const& data);
 
-    static SkinCancerDetectorServiceSource::ErrorType convert(engines::ImageConvertorTypeError type);
+    static SkinCancerDetectorServiceSource::ErrorType convert(image::ImageConvertorTypeError type);
 
 private:
-    std::shared_ptr<engines::ImageConvertor> m_imageConvertor = nullptr;
+    image::IImageConvertorPtr m_imageConvertor = nullptr;
     bool m_running = false;
     bool m_stop = false;
     std::atomic_size_t m_queueSize = 0;

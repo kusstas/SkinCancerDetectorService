@@ -1,24 +1,19 @@
 #pragma once
 
+#include "common/ISettings.h"
+
 #include <QVector>
-#include <QDebug>
 
 
-namespace engines
+namespace image
 {
 /**
  * @brief The ImageConvertorSettings class - settings for ImageConvertor
  */
-class ImageConvertorSettings
+class ImageConvertorSettings : public common::ISettings
 {
 public:
     ImageConvertorSettings() = default;
-
-    /**
-     * @brief valid object - setting can be passed to ImageConvertorSettings
-     * @return bool
-     */
-    bool valid() const;
 
     /**
      * @brief width - necessary width for forward data through TensorEngine
@@ -85,30 +80,11 @@ public:
      */
     void setChannels(int channels);
 
-    /**
-     * @brief set zoom
-     * @param zoom should be greater than 1
-     */
-    void setZoom(float zoom);
+public: // IJsonParsed interface
+    bool parse(QJsonObject const& json) override;
 
-    /**
-     * @brief set std
-     * @warning for valid should be equal channels
-     * @param std
-     */
-    void setStd(QVector<float> const& std);
-
-    /**
-     * @brief set mean
-     * @warning for valid should be equal channels
-     */
-    void setMean(QVector<float> const& mean);
-
-    /**
-     * @brief set count tests for estimate convert image
-     * @param countTestsForEstimate should be greater than 0
-     */
-    void setCountTestsForEstimate(size_t countTestsForEstimate);
+public: // ISettings interface
+    bool valid() const override;
 
 private:
     int m_width = 0;
@@ -121,6 +97,4 @@ private:
 
     size_t m_countTestsForEstimate = 0;
 };
-
-QDebug operator<<(QDebug d, ImageConvertorSettings const& obj);
 }

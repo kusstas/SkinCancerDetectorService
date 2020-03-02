@@ -2,16 +2,14 @@
 
 #include <QLoggingCategory>
 
-#include "engines/TensorEngine.h"
-
 
 namespace service
 {
 Q_LOGGING_CATEGORY(QLC_TENSOR_WORKER, "TensorEngineWorker")
 
-using Tensor = engines::TensorEngine::Tensor;
+using Tensor = engines::ITensorEngine::Tensor;
 
-TensorEngineWorker::TensorEngineWorker(std::shared_ptr<engines::TensorEngine> const& engine, QObject* parent)
+TensorEngineWorker::TensorEngineWorker(engines::ITensorEnginePtr const& engine, QObject* parent)
     : QObject(parent)
     , m_engine(engine)
 {
@@ -33,6 +31,11 @@ bool TensorEngineWorker::running() const
 int TensorEngineWorker::queueSize() const
 {
     return m_requests.size();
+}
+
+size_t TensorEngineWorker::maxBatches() const
+{
+    return m_engine->maxBatches();
 }
 
 void TensorEngineWorker::start()
@@ -77,7 +80,7 @@ void TensorEngineWorker::stop()
     }
 }
 
-void TensorEngineWorker::push(quint64 id, QVector<cv::Mat> const& data)
+void TensorEngineWorker::push(quint64 id, common::IEngineInputDataPtr const& data)
 {
     if (m_stop)
     {
@@ -167,20 +170,7 @@ bool TensorEngineWorker::loadData(QList<TensorEngineWorker::Request> const& data
 {
     for (int b = 0; b < data.size(); ++b)
     {
-        size_t offset = 0;
-        auto const& channels = data[b].data;
-        for (int ch = 0; ch < channels.size(); ++ch)
-        {
-            auto const& channel = channels[ch];
-            auto const floatData = reinterpret_cast<Tensor const*>(channel.data);
-
-            if(!m_engine->loadToInput(b, offset, floatData, channel.total()))
-            {
-                return false;
-            }
-
-            offset += channel.total();
-        }
+        data[b].data->load(b, *m_engine);
     }
 
     return true;

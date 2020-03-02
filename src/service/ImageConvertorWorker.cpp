@@ -1,7 +1,5 @@
 #include "ImageConvertorWorker.h"
 
-#include "engines/ImageConvertor.h"
-
 #include <QLoggingCategory>
 #include <QRunnable>
 
@@ -31,10 +29,10 @@ public:
 
     void run() override
     {
-        engines::ImageConvertorTypeError error = engines::ImageConvertorTypeError::NoError;
+        image::ImageConvertorTypeError error = image::ImageConvertorTypeError::NoError;
         auto const result = getResult(&error);
 
-        if (!result.isEmpty())
+        if (result)
         {
             emit worker()->result(id(), result);
         }
@@ -46,7 +44,7 @@ public:
     }
 
 protected:
-    virtual QVector<cv::Mat> getResult(engines::ImageConvertorTypeError* error) = 0;
+    virtual common::IEngineInputDataPtr getResult(image::ImageConvertorTypeError* error) = 0;
 
 private:
     quint64 m_id = 0;
@@ -63,7 +61,7 @@ public:
     }
 
 protected:
-    QVector<cv::Mat> getResult(engines::ImageConvertorTypeError* error) override
+    common::IEngineInputDataPtr getResult(image::ImageConvertorTypeError* error) override
     {
         return worker()->imageConvertor()->convert(m_data, error);
     }
@@ -82,7 +80,7 @@ public:
     }
 
 protected:
-    QVector<cv::Mat> getResult(engines::ImageConvertorTypeError* error) override
+    common::IEngineInputDataPtr getResult(image::ImageConvertorTypeError* error) override
     {
         return worker()->imageConvertor()->convert(m_path, error);
     }
@@ -91,7 +89,9 @@ private:
     QString m_path{};
 };
 
-ImageConvertorWorker::ImageConvertorWorker(std::shared_ptr<engines::ImageConvertor> const& imageConvertor, size_t maxThreads, QObject* parent)
+ImageConvertorWorker::ImageConvertorWorker(image::IImageConvertorPtr const& imageConvertor,
+                                           size_t maxThreads,
+                                           QObject* parent)
     : QObject(parent)
     , m_imageConvertor(imageConvertor)
 {
@@ -118,9 +118,9 @@ size_t ImageConvertorWorker::maxThreads() const
     return m_pool.maxThreadCount();
 }
 
-engines::ImageConvertor* ImageConvertorWorker::imageConvertor() const
+image::IImageConvertorPtr const& ImageConvertorWorker::imageConvertor() const
 {
-    return m_imageConvertor.get();
+    return m_imageConvertor;
 }
 
 void ImageConvertorWorker::start()
@@ -200,9 +200,9 @@ void ImageConvertorWorker::setRunning(bool running)
     emit runningChanged(m_running);
 }
 
-SkinCancerDetectorServiceSource::ErrorType ImageConvertorWorker::convert(engines::ImageConvertorTypeError type)
+SkinCancerDetectorServiceSource::ErrorType ImageConvertorWorker::convert(image::ImageConvertorTypeError type)
 {
-    using ICTE = engines::ImageConvertorTypeError;
+    using ICTE = image::ImageConvertorTypeError;
 
     switch (type) {
     case ICTE::NoError:

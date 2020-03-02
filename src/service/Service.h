@@ -1,16 +1,11 @@
 #pragma once
 
 #include <rep_SkinCancerDetectorService_source.h>
-
 #include <memory>
 
-
-namespace engines
-{
-class TensorEngine;
-class ImageConvertor;
-class ImageConvertorSettings;
-}
+#include "common/IEstimated.h"
+#include "engines/ITensorEngine.h"
+#include "image/IImageConvertor.h"
 
 namespace service
 {
@@ -55,18 +50,16 @@ private slots:
 
 private:
     void createComponents();
-    void setupImageConvertorSettings(engines::ImageConvertorSettings* settings) const;
-    void setupService(ServiceSettings const* settings);
-    void enableRemoting(ServiceSettings const* settings);
-    void estimate();
+    void setupService(ServiceSettings const& settings,
+                      engines::ITensorEnginePtr const& tensorEngine,
+                      image::IImageConvertorPtr const& imageConvertor);
+    void enableRemoting(ServiceSettings const& settings);
+    void estimate(common::IEstimated* imageConvertor, common::IEstimated* tensorEngine);
 
     qint64 estimateNextRequest() const;
     quint64 getRequestId();
 
 private:
-    std::shared_ptr<engines::TensorEngine> m_tensorEngine = nullptr;
-    std::shared_ptr<engines::ImageConvertor> m_imageConvertor = nullptr;
-
     TensorEngineWorker* m_tensorEngineWorker = nullptr;
     ImageConvertorWorker* m_imageConvertorWorker = nullptr;
 
