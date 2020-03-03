@@ -24,6 +24,10 @@ public:
     static constexpr auto TENSOR_RT = "TensorRt";
 #endif
 
+#ifdef INCLUDE_TORCH_BUILD
+    static constexpr auto TORCH = "Torch";
+#endif
+
 private:
    using TensorEngineContructor = std::function<engines::ITensorEnginePtr()>;
 

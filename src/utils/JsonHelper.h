@@ -103,7 +103,9 @@ inline bool JsonHelper::get(Context const& ctx,
 
     if (ctx.warning)
     {
-        qCWarning(m_logCategory) << "Cannot assign:" << value << "from:" << ctx.key << "to" << typeid(T).name();
+        auto typeName = abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr);
+        qCWarning(m_logCategory) << "Cannot assign:" << value << "from:" << ctx.key << "to" << typeName;
+        delete typeName;
     }
 
     return false;

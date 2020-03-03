@@ -2,7 +2,6 @@
 #include "TensorEngineSettings.h"
 
 #include <QLoggingCategory>
-#include <QElapsedTimer>
 #include <QFile>
 
 
@@ -44,15 +43,17 @@ public:
 
 bool TensorEngine::load(engines::GeneralTensorEngineSettings const& settings)
 {
-    auto const& tensorRtSettigs = settings.toInstance<tensorRt::TensorEngineSettings>();
-
-    if (!(tensorRtSettigs && tensorRtSettigs->valid()))
+    if (!BaseTensorEngine::load(settings))
     {
-        qCCritical(QLC_TENSOR_RT_ENGINE) << "Invalid setting for create tensor engine";
-        return false;
+        return settings;
     }
 
-    auto const countTestsForEstimate = tensorRtSettigs->countTestsForEstimate();
+    auto const& tensorRtSettigs = settings.toInstance<tensorRt::TensorEngineSettings>();
+    if (tensorRtSettigs)
+    {
+        qCCritical(QLC_TENSOR_RT_ENGINE) << "Invalid setting for load tensor rt engine";
+        return false;
+    }
 
     auto engine = deserialize(*tensorRtSettigs);
     if (!engine)
@@ -113,7 +114,6 @@ bool TensorEngine::load(engines::GeneralTensorEngineSettings const& settings)
     m_batchOutputN = batchOutputN;
     m_engine = std::move(engine);
     m_executionContext = std::move(ctx);
-    m_countTestsForEstimate = countTestsForEstimate;
 
     return true;
 }
@@ -143,38 +143,24 @@ size_t TensorEngine::outputSize() const
     return m_outputDim.d[0];
 }
 
+size_t TensorEngine::batchInputN() const
+{
+    return m_batchInputN;
+}
+
+size_t TensorEngine::batchOutputN() const
+{
+    return m_batchOutputN;
+}
+
 bool TensorEngine::loadToInput(size_t batch, size_t offset, Tensor const* src, size_t n)
 {
-    if (src == nullptr)
+    if (!validateLoadInput(batch, offset, src, n))
     {
-        qCCritical(QLC_TENSOR_RT_ENGINE) << "Input data is nullptr";
-        return false;
-    }
-    if (batch >= maxBatches())
-    {
-        qCCritical(QLC_TENSOR_RT_ENGINE) << "Batch argument" << QString::number(batch)
-                                         << "should be less than max batches"
-                                         << QString::number(maxBatches());
         return false;
     }
 
-    auto const free = m_batchInputN - offset;
-    if (free <= 0)
-    {
-        qCCritical(QLC_TENSOR_RT_ENGINE) << "Offset argument" << QString::number(offset)
-                                         << "should be less than size of batch"
-                                         << QString::number(m_batchInputN);
-        return false;
-    }
-    if (n > free)
-    {
-        qCCritical(QLC_TENSOR_RT_ENGINE) << "Count argument" << QString::number(n)
-                                         << "should be less than size of batch with offset"
-                                         << QString::number(free);
-        return false;
-    }
-
-    auto const input = static_cast<void*>(static_cast<Tensor*>(m_input.get()) + batch * m_batchInputN + offset);
+    auto const input = static_cast<void*>(static_cast<Tensor*>(m_input.get()) + batch * batchInputN() + offset);
     auto const count = n * sizeof(Tensor);
 
     bool const result = cudaMemcpy(input, src, count, cudaMemcpyHostToDevice) == ::cudaSuccess;
@@ -188,20 +174,12 @@ bool TensorEngine::loadToInput(size_t batch, size_t offset, Tensor const* src, s
 
 bool TensorEngine::unloadOutput(size_t batches, Tensor* dst)
 {
-    if (dst == nullptr)
+    if (!validateLoadOutput(batches, dst))
     {
-        qCCritical(QLC_TENSOR_RT_ENGINE) << "Input data is nullptr";
-        return false;
-    }
-    if (batches == 0 || batches > maxBatches())
-    {
-        qCCritical(QLC_TENSOR_RT_ENGINE) << "Batches argument" << QString::number(batches)
-                                         << "should be geater than 0 and less(include) than max batches"
-                                         << QString::number(maxBatches());
         return false;
     }
 
-    auto const count = batches * m_batchOutputN * sizeof(Tensor);
+    auto const count = batches * batchOutputN() * sizeof(Tensor);
     bool const result = cudaMemcpy(dst, m_output.get(), count, cudaMemcpyDeviceToHost)  == ::cudaSuccess;
 
     qCDebug(QLC_TENSOR_RT_ENGINE) << "Unload data from device, batches:" << batches
@@ -212,7 +190,7 @@ bool TensorEngine::unloadOutput(size_t batches, Tensor* dst)
 
 bool TensorEngine::infer(size_t batches)
 {
-    if (batches > maxBatches())
+    if (!validateInfer(batches))
     {
         return false;
     }
@@ -225,49 +203,6 @@ bool TensorEngine::infer(size_t batches)
     qCInfo(QLC_TENSOR_RT_ENGINE) << "Infer batches" << batches << (result ? "completed" : "failed");
 
     return result;
-}
-
-qint64 TensorEngine::estimate()
-{
-    qCInfo(QLC_TENSOR_RT_ENGINE) << "Estimate infer starting";
-
-    auto const estimateSuccess = [] (qint64 milliseconds) {
-        qCInfo(QLC_TENSOR_RT_ENGINE) << "Estimate infer completed:" << milliseconds << "nanoseconds";
-        return milliseconds;
-    };
-
-    auto const estimateFailed = [] () {
-        qCInfo(QLC_TENSOR_RT_ENGINE) << "Estimate infer failed";
-        return -1;
-    };
-
-    QElapsedTimer timer;
-    std::unique_ptr<float[]> const dummyInput(new float[maxBatches() * m_batchInputN]);
-    std::unique_ptr<float[]> const dummyOutput(new float[maxBatches() * m_batchOutputN]);
-
-    timer.start();
-    for (size_t i = 0; i < m_countTestsForEstimate; ++i)
-    {
-        for (size_t b = 0; b < maxBatches(); ++b)
-        {
-            if(!loadToInput(b, 0, dummyInput.get(), m_batchInputN))
-            {
-                return estimateFailed();
-            }
-        }
-
-        if(!infer(maxBatches()))
-        {
-            return estimateFailed();
-        }
-
-        if(!unloadOutput(maxBatches(), dummyOutput.get()))
-        {
-            return estimateFailed();
-        }
-    }
-
-    return estimateSuccess(timer.nsecsElapsed() / m_countTestsForEstimate);
 }
 
 void TensorEngine::serialize(TensorEngineSettings const& settings)

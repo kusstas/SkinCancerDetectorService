@@ -9,9 +9,6 @@
 #include <QLoggingCategory>
 
 
-static constexpr auto SETTINGS_PATH = "settings.json";
-
-
 namespace service
 {
 Q_LOGGING_CATEGORY(QLC_SERVICE, "Service")

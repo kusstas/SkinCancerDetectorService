@@ -7,6 +7,11 @@
 #include "engines/tensorRt/TensorEngineSettings.h"
 #endif
 
+#ifdef INCLUDE_TORCH_BUILD
+#include "engines/torch/TensorEngine.h"
+#include "engines/torch/TensorEngineSettings.h"
+#endif
+
 #include <QMetaType>
 
 
@@ -19,6 +24,11 @@ void ServiceLocator::init()
 #ifdef INCLUDE_TENSOR_RT_BUILD
     engines::tensorRt::TensorEngineSettings::registerSelf(TENSOR_RT);
     m_tensorEngineContructors.insert(TENSOR_RT, [] () { return std::make_shared<engines::tensorRt::TensorEngine>(); });
+#endif
+
+#ifdef INCLUDE_TORCH_BUILD
+    engines::torch::TensorEngineSettings::registerSelf(TORCH);
+    m_tensorEngineContructors.insert(TORCH, [] () { return std::make_shared<engines::torch::TensorEngine>(); });
 #endif
 }
 

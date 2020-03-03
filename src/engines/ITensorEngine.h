@@ -8,6 +8,7 @@
 #include "common/IEstimated.h"
 #include "BaseTensorEngineSettings.h"
 
+
 namespace engines
 {
 /**
@@ -60,6 +61,18 @@ public:
     virtual size_t outputSize() const = 0;
 
     /**
+     * @brief count elements in one input batch
+     * @return
+     */
+    virtual size_t batchInputN() const = 0;
+
+    /**
+     * @brief count elements in one output batch
+     * @return
+     */
+    virtual size_t batchOutputN() const = 0;
+
+    /**
      * @brief load to tnput data to device
      * @param batch - number of batch
      * @param offset - index of memory batch where will be record data
@@ -68,6 +81,7 @@ public:
      * @return bool - success
      */
     virtual bool loadToInput(size_t batch, size_t offset, Tensor const* src, size_t n) = 0;
+
 
     /**
      * @brief unload output from device

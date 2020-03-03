@@ -7,6 +7,7 @@
 #include "image/ImageConvertorSettings.h"
 #include "service/ServiceSettings.h"
 
+
 namespace utils
 {
 struct Settings : public common::ISettings

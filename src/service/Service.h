@@ -7,6 +7,7 @@
 #include "engines/ITensorEngine.h"
 #include "image/IImageConvertor.h"
 
+
 namespace service
 {
 class ServiceSettings;

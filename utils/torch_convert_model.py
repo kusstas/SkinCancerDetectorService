@@ -1,12 +1,12 @@
 import torch
 import torch.onnx
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = torch.load("./model")
+device = torch.device("cpu")
+model = torch.load("model.uu", map_location='cpu')
 model.to(device)
 model.eval()
 
-dummy = torch.ones((1, 3, 224, 224)).cuda()
+dummy = torch.ones((1, 3, 224, 224))
 
 torch.onnx.export(model,
                   dummy,
@@ -15,4 +15,9 @@ torch.onnx.export(model,
                   do_constant_folding=True,
                   opset_version=9,
                   verbose=True)
+
+dummy = torch.ones((1, 3, 224, 224))
+
+scripted_model = torch.jit.trace(model, dummy)
+scripted_model.save('skin_cancer_detector.pth')
 

@@ -34,7 +34,7 @@ public:
 public:
     bool valid() const override
     {
-        return false;
+        return m_typesConstructors.contains(type()) && maxBatches() > 0 && countTestsForEstimate() > 0;;
     }
 
     QString const& type() const override
@@ -127,6 +127,6 @@ bool BaseTensorEngineSettings::parse(QJsonObject const& json)
 
 bool BaseTensorEngineSettings::valid() const
 {
-    return m_typesConstructors.contains(type()) && maxBatches() > 0 && countTestsForEstimate() > 0;
+    return m_instance ? m_instance->valid() : false;
 }
 }

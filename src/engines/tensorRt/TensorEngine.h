@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engines/ITensorEngine.h"
+#include "engines/BaseTensorEngine.h"
 
 #include <memory>
 #include <cstdint>
@@ -25,7 +25,7 @@ class TensorEngineSettings;
 /**
  * @brief The TensorEngine class forward data through Neural Network by TensorRt Framework
  */
-class TensorEngine : public engines::ITensorEngine
+class TensorEngine : public engines::BaseTensorEngine
 {
 public:
     TensorEngine() = default;
@@ -37,12 +37,11 @@ public:  // ITensorEngine interface
     size_t inputHeight() const override;
     size_t inputChannels() const override;
     size_t outputSize() const override;
+    size_t batchInputN() const override;
+    size_t batchOutputN() const override;
     bool loadToInput(size_t batch, size_t offset, Tensor const* src, size_t n) override;
     bool unloadOutput(size_t batches, Tensor* dst) override;
     bool infer(size_t batches) override;
-
-public: // IEstimated interface
-    qint64 estimate() override;
 
 private:
     /**
@@ -115,8 +114,6 @@ private:
 
     ICudaEnginePtr m_engine = nullptr;
     IExecutionContextPtr m_executionContext = nullptr;
-
-    size_t m_countTestsForEstimate = 0;
 };
 }
 }

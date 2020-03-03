@@ -55,10 +55,11 @@ public:
      * @brief cast object to child instance
      */
     template <typename T>
-    T* toInstance() const
+    T const* toInstance() const
     {
         static_assert(std::is_base_of<BaseTensorEngineSettings, T>::value, "T should inheritance TensorEngineSettings");
-        return dynamic_cast<T*>(m_instance.get());
+        return m_instance && m_instance->m_instance ? dynamic_cast<T const*>(m_instance.get())
+                                                    : dynamic_cast<T const*>(this);
     }
 
 public: // IJsonParsed interface
