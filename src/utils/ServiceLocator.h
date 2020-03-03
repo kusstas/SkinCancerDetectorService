@@ -21,11 +21,11 @@ public:
     image::IImageConvertorPtr createImageConvertor() const;
 
 #ifdef INCLUDE_TENSOR_RT_BUILD
-    static constexpr auto TENSOR_RT = "TensorRt";
+    static constexpr auto TENSOR_RT = "tensorRt";
 #endif
 
 #ifdef INCLUDE_TORCH_BUILD
-    static constexpr auto TORCH = "Torch";
+    static constexpr auto TORCH = "torch";
 #endif
 
 private:

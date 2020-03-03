@@ -1,10 +1,15 @@
 #include "BaseTensorEngineSettings.h"
 #include "utils/JsonHelper.h"
 
+#include <QCoreApplication>
+#include <QRegularExpression>
 #include <QLoggingCategory>
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QMetaEnum>
+
+#define ARG_TYPE_KEY   "tensor-engine"
+#define ARG_TYPE_VALUE "value"
 
 
 namespace engines
@@ -12,21 +17,41 @@ namespace engines
 Q_LOGGING_CATEGORY(QLC_BASE_TENSOR_SETTINGS, "BaseTensorSettings")
 
 static utils::JsonHelper const JSON_HELPER(QLC_BASE_TENSOR_SETTINGS);
+static constexpr auto ARG_TYPE_REG = "--" ARG_TYPE_KEY "=(?<" ARG_TYPE_VALUE ">\\w+)";
+
+
 BaseTensorEngineSettings::TypesConstructors BaseTensorEngineSettings::m_typesConstructors{};
 
 class CommonTensorEngineSettings : public BaseTensorEngineSettings
-{
-    // ISettings interface
+{   
 public:
     CommonTensorEngineSettings()
         : BaseTensorEngineSettings(false)
     {
+        auto args = QCoreApplication::arguments();
+
+        QRegularExpression reg(ARG_TYPE_REG);
+        for (int i = 1; i < args.size(); ++i)
+        {
+            auto match = reg.match(args[i]);
+            if (match.hasMatch())
+            {
+                m_type = match.captured(ARG_TYPE_VALUE);
+                break;
+            }
+        }
     }
 
     bool parse(QJsonObject const& json) override
     {
-        return JSON_HELPER.get(json, "type", m_type, true)
-                && JSON_HELPER.get(json, "maxBatches", m_maxBatches, true)
+        if (m_type.isEmpty())
+        {
+            if(!JSON_HELPER.get(json, "type", m_type, true))
+            {
+                return false;
+            }
+        }
+        return JSON_HELPER.get(json, "maxBatches", m_maxBatches, true)
                 && JSON_HELPER.get(json, "countTestsForEstimate", m_countTestsForEstimate, true);
     }
 

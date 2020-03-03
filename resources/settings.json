@@ -4,17 +4,17 @@
         "maxImageConvertorThreads" : -1
     },
     "nn" : {
-        "type" : "Torch",
+        "type" : "torch",
         "maxBatches" : 8,
         "countTestsForEstimate" : 10,
 
-        "TensorRt" : {
+        "tensorRt" : {
            "maxWorkspaceSize" : 2097152,
            "onnxFilePath" : "skin_cancer_detector.onnx",
            "serializedFilePath" : "skin_cancer_detector.pb"
         },
 
-        "Torch" : {
+        "torch" : {
             "width" : 224,
             "height" : 224,
             "channels" : 3,
