@@ -18,6 +18,8 @@
 
 namespace engines
 {
+class BaseTensorEngineSettings;
+
 namespace tensorRt
 {
 class TensorEngineSettings;
@@ -31,7 +33,7 @@ public:
     TensorEngine() = default;
 
 public:  // ITensorEngine interface
-    bool load(engines::GeneralTensorEngineSettings const& settings) override;
+    bool load(engines::BaseTensorEngineSettings const& settings) override;
     size_t maxBatches() const override;
     size_t inputWidth() const override;
     size_t inputHeight() const override;
@@ -81,9 +83,10 @@ private:
 private:
     /**
      * @brief serialize builded ICudaEngine to file
+     * @param engine for serialize
      * @param settings - for get serializing file path
      */
-    void serialize(TensorEngineSettings const& settings);
+    void serialize(nvinfer1::ICudaEngine* engine, TensorEngineSettings const& settings);
 
     /**
      * @brief deserialize builded engine to memory

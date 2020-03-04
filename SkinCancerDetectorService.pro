@@ -1,7 +1,7 @@
 QT -= gui
 QT += remoteobjects
 
-# CONFIG += tensorrt
+CONFIG += tensorrt
 CONFIG += torch
 
 CONFIG += c++17 console
@@ -87,7 +87,12 @@ INCLUDEPATH += src/
 INCLUDEPATH += $$(OPENCV_INCLUDE)
 DEPENDPATH += $$(OPENCV_INCLUDE)
 
+isEmpty(OPENCV_LIBS) {
+LIBS += -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
+}
+else {
 LIBS += -L$$(OPENCV_LIBS) -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
+}
 
 
 tensorrt {
@@ -107,5 +112,5 @@ DEPENDPATH += $$(TORCH_ROOT)/include
 INCLUDEPATH += $$(TORCH_ROOT)/include/torch/csrc/api/include/
 DEPENDPATH += $$(TORCH_ROOT)/include/torch/csrc/api/include/
 
-LIBS += -L$$(TORCH_ROOT)/lib/ -ltorch -lshm -lnnpack -lc10
+LIBS += -L$$(TORCH_ROOT)/lib/ -ltorch -lnnpack -lc10
 }

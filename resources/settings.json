@@ -4,7 +4,7 @@
         "maxImageConvertorThreads" : -1
     },
     "nn" : {
-        "type" : "torch",
+        "type" : "tensorRt",
         "maxBatches" : 8,
         "countTestsForEstimate" : 10,
 
@@ -20,7 +20,7 @@
             "channels" : 3,
             "output" : 2,
             "modelPath" : "skin_cancer_detector.pth",
-            "device" : "cpu"
+            "device" : "cuda"
         }
     },
     "image" : {

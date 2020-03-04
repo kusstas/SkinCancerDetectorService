@@ -41,15 +41,15 @@ public:
     }
 } gLogger;
 
-bool TensorEngine::load(engines::GeneralTensorEngineSettings const& settings)
+bool TensorEngine::load(engines::BaseTensorEngineSettings const& settings)
 {
     if (!BaseTensorEngine::load(settings))
     {
-        return settings;
+        return false;
     }
 
     auto const& tensorRtSettigs = settings.toInstance<tensorRt::TensorEngineSettings>();
-    if (tensorRtSettigs)
+    if (!tensorRtSettigs)
     {
         qCCritical(QLC_TENSOR_RT_ENGINE) << "Invalid setting for load tensor rt engine";
         return false;
@@ -61,7 +61,7 @@ bool TensorEngine::load(engines::GeneralTensorEngineSettings const& settings)
         engine = build(*tensorRtSettigs);
         if (engine)
         {
-            serialize(*tensorRtSettigs);
+            serialize(engine.get(), *tensorRtSettigs);
         }
     }
 
@@ -71,7 +71,7 @@ bool TensorEngine::load(engines::GeneralTensorEngineSettings const& settings)
         return false;
     }
 
-    IExecutionContextPtr const ctx(engine->createExecutionContext());
+    IExecutionContextPtr ctx(engine->createExecutionContext());
 
     if(!ctx)
     {
@@ -97,14 +97,14 @@ bool TensorEngine::load(engines::GeneralTensorEngineSettings const& settings)
         qCCritical(QLC_TENSOR_RT_ENGINE) << "Cuda memory alloc failed bytes required:" << inputSize;
         return false;
     }
-    CudaMemPtr const inputPtr(input);
+    CudaMemPtr inputPtr(input);
 
     if (cudaMalloc(&output, outputSize) != ::cudaSuccess)
     {
         qCCritical(QLC_TENSOR_RT_ENGINE) << "Cuda memory alloc failed bytes required:" << outputSize;
         return false;
     }
-    CudaMemPtr const outputPtr(output);
+    CudaMemPtr outputPtr(output);
 
     m_input = std::move(inputPtr);
     m_output = std::move(outputPtr);
@@ -205,13 +205,13 @@ bool TensorEngine::infer(size_t batches)
     return result;
 }
 
-void TensorEngine::serialize(TensorEngineSettings const& settings)
+void TensorEngine::serialize(nvinfer1::ICudaEngine* engine, TensorEngineSettings const& settings)
 {
     qCInfo(QLC_TENSOR_RT_ENGINE) << "Trying serilize file" << settings.serializedFilePath();
 
     bool serialized = false;
 
-    IHostMemoryPtr const hostMemory(m_engine->serialize());
+    IHostMemoryPtr const hostMemory(engine->serialize());
     if (hostMemory)
     {
         QFile file(settings.serializedFilePath());
