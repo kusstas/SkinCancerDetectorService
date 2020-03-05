@@ -22,7 +22,6 @@ case $i in
     ;;
     --qtlib=*)
     QT_LIB_DIR="${i#*=}"
-    echo $QT_LIB_DIR
     shift
     ;;
     --opencvlib=*)
