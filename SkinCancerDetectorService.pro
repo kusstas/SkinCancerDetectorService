@@ -87,7 +87,7 @@ INCLUDEPATH += src/
 INCLUDEPATH += $$(OPENCV_INCLUDE)
 DEPENDPATH += $$(OPENCV_INCLUDE)
 
-isEmpty(OPENCV_LIBS) {
+equals(OPENCV_LIBS, "") {
 LIBS += -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
 }
 else {
