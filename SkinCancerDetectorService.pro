@@ -1,8 +1,18 @@
 QT -= gui
 QT += remoteobjects
 
+TENSOR_RT_BUILD = $$(ENABLE_TENSOR_RT_BUILD)
+TORCH_BUILD = $$(ENABLE_TORCH_BUILD)
+
+isEqual(TENSOR_RT_BUILD, "ON") {
+message("TensorRT build included!")
 CONFIG += tensorrt
+}
+
+isEqual(TORCH_BUILD, "ON") {
+message("Torch build included!")
 CONFIG += torch
+}
 
 CONFIG += c++17 console
 CONFIG += file_copies
@@ -87,7 +97,9 @@ INCLUDEPATH += src/
 INCLUDEPATH += $$(OPENCV_INCLUDE)
 DEPENDPATH += $$(OPENCV_INCLUDE)
 
-equals(OPENCV_LIBS, "") {
+OPENCV_LIBS_EXIST = $$(OPENCV_LIBS)
+
+isEmpty(OPENCV_LIBS_EXIST) {
 LIBS += -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
 }
 else {
