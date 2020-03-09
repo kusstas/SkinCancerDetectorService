@@ -32,8 +32,10 @@ class TensorEngine : public engines::BaseTensorEngine
 public:
     TensorEngine() = default;
 
-public:  // ITensorEngine interface
-    bool load(engines::BaseTensorEngineSettings const& settings) override;
+public: // BaseTensorEngine interface
+    bool loadImpl(BaseTensorEngineSettings const& settings) override;
+
+public: // ITensorEngine interface
     size_t maxBatches() const override;
     size_t inputWidth() const override;
     size_t inputHeight() const override;

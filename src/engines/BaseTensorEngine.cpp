@@ -8,6 +8,11 @@ namespace engines
 {
 Q_LOGGING_CATEGORY(QLC_BASE_TENSOR_ENGINE, "BaseTensorEngine")
 
+BaseTensorEngineSettings const& BaseTensorEngine::settings() const
+{
+    return m_settings;
+}
+
 qint64 BaseTensorEngine::estimate()
 {
     qCInfo(QLC_BASE_TENSOR_ENGINE) << "Estimate infer starting";
@@ -61,12 +66,30 @@ bool BaseTensorEngine::load(BaseTensorEngineSettings const& settings)
 
     m_settings = settings;
 
+    loadImpl(settings);
+
+    if (m_settings.positiveIndex() >= outputSize() || m_settings.negativeIndex() >= outputSize())
+    {
+        qCCritical(QLC_BASE_TENSOR_ENGINE) << "Invalid indexes for output tensor engine";
+        return false;
+    }
+
     return true;
 }
 
-BaseTensorEngineSettings const& BaseTensorEngine::settings() const
+size_t BaseTensorEngine::positiveIndex() const
 {
-    return m_settings;
+    return settings().positiveIndex();
+}
+
+size_t BaseTensorEngine::negativeIndex() const
+{
+    return settings().negativeIndex();
+}
+
+bool BaseTensorEngine::loadImpl(BaseTensorEngineSettings const&)
+{
+    return false;
 }
 
 bool BaseTensorEngine::validateLoadInput(size_t batch, size_t offset, Tensor const* src, size_t n) const

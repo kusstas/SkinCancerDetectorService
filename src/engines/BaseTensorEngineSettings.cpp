@@ -52,6 +52,8 @@ public:
             }
         }
         return JSON_HELPER.get(json, "maxBatches", m_maxBatches, true)
+                && JSON_HELPER.get(json, "positiveIndex", m_positiveIndex, true)
+                && JSON_HELPER.get(json, "negativeIndex", m_negativeIndex, true)
                 && JSON_HELPER.get(json, "countTestsForEstimate", m_countTestsForEstimate, true);
     }
 
@@ -59,7 +61,12 @@ public:
 public:
     bool valid() const override
     {
-        return m_typesConstructors.contains(type()) && maxBatches() > 0 && countTestsForEstimate() > 0;;
+        return m_typesConstructors.contains(type())
+                && maxBatches() > 0
+                && countTestsForEstimate() > 0
+                && positiveIndex() >= 0
+                && negativeIndex() >= 0
+                && positiveIndex() != negativeIndex();
     }
 
     QString const& type() const override
@@ -77,10 +84,22 @@ public:
         return m_countTestsForEstimate;
     }
 
+    size_t positiveIndex() const override
+    {
+        return m_positiveIndex;
+    }
+
+    size_t negativeIndex() const override
+    {
+        return m_negativeIndex;
+    }
+
 private:
     QString m_type{};
     size_t m_maxBatches = 0;
     size_t m_countTestsForEstimate = 0;
+    size_t m_positiveIndex = 0;
+    size_t m_negativeIndex = 0;
 };
 
 void BaseTensorEngineSettings::registerType(QString const& type, TypeConstructor const& constructor)
@@ -114,6 +133,16 @@ size_t BaseTensorEngineSettings::maxBatches() const
 size_t BaseTensorEngineSettings::countTestsForEstimate() const
 {
     return m_instance->countTestsForEstimate();
+}
+
+size_t BaseTensorEngineSettings::positiveIndex() const
+{
+    return m_instance->positiveIndex();
+}
+
+size_t BaseTensorEngineSettings::negativeIndex() const
+{
+    return m_instance->negativeIndex();
 }
 
 bool BaseTensorEngineSettings::parse(QJsonObject const& json)

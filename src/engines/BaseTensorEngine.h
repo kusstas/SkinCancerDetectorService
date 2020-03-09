@@ -14,14 +14,19 @@ class BaseTensorEngine : public engines::ITensorEngine
 public:
     BaseTensorEngine() = default;
 
+    BaseTensorEngineSettings const& settings() const;
+
 public: // IEstimated interface
     qint64 estimate() override;
 
 public: // ITensorEngine interface
     bool load(BaseTensorEngineSettings const& settings) override;
+    size_t positiveIndex() const override;
+    size_t negativeIndex() const override;
 
 protected:
-    BaseTensorEngineSettings const& settings() const;
+    virtual bool loadImpl(BaseTensorEngineSettings const& settings);
+
     bool validateLoadInput(size_t batch, size_t offset, Tensor const* src, size_t n) const;
     bool validateLoadOutput(size_t batches, Tensor* dst) const;
     bool validateInfer(size_t batches) const;

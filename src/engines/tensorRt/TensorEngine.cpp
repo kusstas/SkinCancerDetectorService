@@ -41,13 +41,8 @@ public:
     }
 } gLogger;
 
-bool TensorEngine::load(engines::BaseTensorEngineSettings const& settings)
+bool TensorEngine::loadImpl(engines::BaseTensorEngineSettings const& settings)
 {
-    if (!BaseTensorEngine::load(settings))
-    {
-        return false;
-    }
-
     auto const& tensorRtSettigs = settings.toInstance<tensorRt::TensorEngineSettings>();
     if (!tensorRtSettigs)
     {

@@ -52,6 +52,18 @@ public:
     virtual size_t countTestsForEstimate() const;
 
     /**
+     * @brief positive index of output data
+     * @return
+     */
+    virtual size_t positiveIndex() const;
+
+    /**
+     * @brief negative index of output data
+     * @return
+     */
+    virtual size_t negativeIndex() const;
+
+    /**
      * @brief cast object to child instance
      */
     template <typename T>

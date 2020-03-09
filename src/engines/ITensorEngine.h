@@ -73,6 +73,18 @@ public:
     virtual size_t batchOutputN() const = 0;
 
     /**
+     * @brief positive index of output data
+     * @return
+     */
+    virtual size_t positiveIndex() const = 0;
+
+    /**
+     * @brief negative index of output data
+     * @return
+     */
+    virtual size_t negativeIndex() const = 0;
+
+    /**
      * @brief load to tnput data to device
      * @param batch - number of batch
      * @param offset - index of memory batch where will be record data
@@ -81,7 +93,6 @@ public:
      * @return bool - success
      */
     virtual bool loadToInput(size_t batch, size_t offset, Tensor const* src, size_t n) = 0;
-
 
     /**
      * @brief unload output from device

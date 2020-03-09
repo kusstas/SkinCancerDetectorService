@@ -149,8 +149,8 @@ void TensorEngineWorker::run()
 
         for (int b = 0; b < processedData.size(); ++b)
         {
-            auto const pos = output[b * m_engine->outputSize() + 0];
-            auto const neg = output[b * m_engine->outputSize() + 1];
+            auto const pos = output[b * m_engine->outputSize() + m_engine->positiveIndex()];
+            auto const neg = output[b * m_engine->outputSize() + m_engine->negativeIndex()];
             emit result(processedData[b].id, pos, neg);
         }
     }

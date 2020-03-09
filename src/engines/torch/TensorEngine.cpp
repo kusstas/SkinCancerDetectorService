@@ -9,13 +9,8 @@ namespace torch
 {
 Q_LOGGING_CATEGORY(QLC_TORCH, "TorchEngine")
 
-bool TensorEngine::load(BaseTensorEngineSettings const& settings)
+bool TensorEngine::loadImpl(BaseTensorEngineSettings const& settings)
 {
-    if (!BaseTensorEngine::load(settings))
-    {
-        return false;
-    }
-
     auto const& torchSettigs = settings.toInstance<torch::TensorEngineSettings>();
 
     if (!torchSettigs)

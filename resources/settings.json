@@ -7,6 +7,8 @@
         "type" : "tensorRt",
         "maxBatches" : 8,
         "countTestsForEstimate" : 10,
+        "positiveIndex" : 1,
+        "negativeIndex" : 0,
 
         "tensorRt" : {
            "maxWorkspaceSize" : 2097152,
